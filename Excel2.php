@@ -8,7 +8,7 @@ require( PHP_P.'PHPExcel/PHPExcel.php');
 class Excel2
 {	
 	/** Default timelimit for parser execution */
-	const TIME_LIMIT = 1500;	
+	const TIME_LIMIT = 30;	
 	
 	/** Collection of external generic handler for row parsing */
 	public $row_parser = array();
@@ -207,7 +207,7 @@ class Excel2
 		$highestColumnIndex = \PHPExcel_Cell::columnIndexFromString($highestColumn);
 		
 		// display how many rows and column parsed
-		elapsed('Parsing '.$highestRow.' rows, with '.$highestColumnIndex.' columns');	
+		//elapsed('Parsing '.$highestRow.' rows, with '.$highestColumnIndex.' columns');	
 		
 		// array that conteins arrays which contein one row
 		$all_rows = array();
