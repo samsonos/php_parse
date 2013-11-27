@@ -1,7 +1,7 @@
 <?php
 namespace samson\parse;
 
-class Parse extends \samson\core\externalModule
+class Parse extends \samson\core\CompressableExternalModule
 {
 	/** Default timelimit for parser execution */
 	const TIME_LIMIT = 1500;
