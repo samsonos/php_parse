@@ -5,6 +5,9 @@ namespace samson\parse;
 require( PHP_P.'PHPExcel/PHPExcel.php');
 //[PHPCOMPRESSOR(remove,end)]
 
+use PHPExcel_Cell;
+use PHPExcel_IOFactory;
+
 class Excel2
 {	
 	/** Default timelimit for parser execution */
@@ -53,12 +56,12 @@ class Excel2
 		$this->material_parsers[] = $m;		
 		return $this;
 	}
-	
-	/**
-	 * Set parent structure element to work when building catalog tree
-	 * @param string $selector Structure selector
-	 * @return \samson\parse\Excel2 Chaining
-	 */
+
+    /**
+     * Set parent structure element to work when building catalog tree
+     * @param $name
+     * @return \samson\parse\Excel2 Chaining
+     */
 	public function setStructure( $name )
 	{
 		// If passed parent structure does not exists
@@ -102,12 +105,13 @@ class Excel2
 		
 		return $this;
 	}
-	
-	/**
-	 * Set specific external column parser, if no number is passed parser will be used for all columns
-	 * @param mixed 	$parser Column parser function
-	 * @param integer 	$number Column nubmer	 
-	 */
+
+    /**
+     * Set specific external column parser, if no number is passed parser will be used for all columns
+     * @param mixed $parser Column parser function
+     * @param integer $number Column nubmer
+     * @return $this
+     */
 	public function setColumnParser( $parser, $number = null )
 	{
 		// If existing parser is passed
@@ -127,12 +131,13 @@ class Excel2
 		
 		return $this;
 	}
-	
-	/**
-	 * Set specific external column validator
-	 * @param integer 	$number 	Column nubmer
-	 * @param mixed 	$validator  Column validator function
-	 */
+
+    /**
+     * Set specific external column validator
+     * @param integer $number Column number
+     * @param mixed $validator Column validator function
+     * @return $this
+     */
 	public function setColumnValidator( $number, $validator )
 	{
 		// If existing parser is passed
@@ -155,9 +160,9 @@ class Excel2
 	}	
 	
 	/**
-	 * Convert extention of file to extension that need for parser
+	 * Convert extension of file to extension that need for parser
 	 * @param $file_name string name of file that you wanna parse
-	 * @return extention that need function parse_excel
+	 * @return string extension that need function parse_excel
 	 */
 	private function get_extension($file_name){
 	
@@ -176,13 +181,11 @@ class Excel2
 		}
 		return $extention;
 	}
-	
-	/**
-	 * Parse exel file and save each row in array
-	 * @param string 	$file_name			name of file
-	 * @param integer 	$from_row 			number of row from where you wanna parse
-	 * @return array that contains arrays which contain one row
-	 */
+
+    /**
+     * Parse excel file and save each row in array
+     * @return array that contains arrays which contain one row
+     */
 	public function parse()
 	{		
 		set_time_limit( Parse::TIME_LIMIT );
@@ -193,8 +196,8 @@ class Excel2
 		// Convert extention of file to extension that need for parser
 		$expention = $this->get_extension( $this->file_name );
 		
-		$objReader = \PHPExcel_IOFactory::createReader($expention);
-		$objReader->setReadDataOnly(true);
+		$objReader = PHPExcel_IOFactory::createReader($expention);
+		$objReader->setReadDataOnly(false);
 		
 		$objPHPExcel = $objReader->load($this->file_name);
 		$objWorksheet = $objPHPExcel->getActiveSheet();
@@ -204,13 +207,16 @@ class Excel2
 		
 		// Get columns count
 		$highestColumn = $objWorksheet->getHighestColumn();
-		$highestColumnIndex = \PHPExcel_Cell::columnIndexFromString($highestColumn);
+		$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
 		
 		// display how many rows and column parsed
 		//elapsed('Parsing '.$highestRow.' rows, with '.$highestColumnIndex.' columns');	
 		
 		// array that conteins arrays which contein one row
 		$all_rows = array();
+
+        // Get all merged cells
+        $mergedCellsRange = $objWorksheet->getMergeCells();
 		
 		// Iterate rows
 		for ($i = $this->from_row; $i <= $highestRow; $i++)
@@ -221,8 +227,22 @@ class Excel2
 			// Iterate columns
 			for ($col = 0; $col < $highestColumnIndex; $col++)
 			{
+                // Get current cell
+                $cell = $objWorksheet->getCellByColumnAndRow($col, $i);
+
+                // Find if this is cell is merged with others
+                foreach($mergedCellsRange as $currMergedRange)
+                {
+                    if($cell->isInRange($currMergedRange))
+                    {
+                        $currMergedCellsArray = PHPExcel_Cell::splitRange($currMergedRange);
+                        $cell = $objWorksheet->getCell($currMergedCellsArray[0][0]);
+                        break;
+                    }
+                }
+
 				// Read column
-				$column_data = $objWorksheet->getCellByColumnAndRow($col, $i)->getValue(); 
+				$column_data = $cell->getValue();
 				
 				// If external column parser is specified
 				foreach ($this->column_parsers as $parser) 
