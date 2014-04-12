@@ -57,6 +57,17 @@ class Excel2
 		return $this;
 	}
 
+
+    public function createStructureField ($field)
+    {
+        $fieldID = dbQuery('\samson\cms\cmsfield')->Name($field)->first();
+        $sf = new \samson\activerecord\structurefield(false);
+        $sf->FieldID = $fieldID->FieldID;
+        $sf->StructureID = $this->parent_structure->StructureID;
+        $sf->Active = 1;
+        $sf->save();
+        return $this;
+    }
     /**
      * Set parent structure element to work when building catalog tree
      * @param $name
@@ -186,12 +197,14 @@ class Excel2
      * Parse excel file and save each row in array
      * @return array that contains arrays which contain one row
      */
-	public function parse()
+	public function parse($clear = true)
 	{		
 		set_time_limit( Parse::TIME_LIMIT );
 				
 		// Clear old parent structure entities
-		if( isset($this->parent_structure) ) SamsonCMS::structure_clear( $this->parent_structure );
+        if ($clear) {
+            if( isset($this->parent_structure) ) SamsonCMS::structure_clear( $this->parent_structure );
+        }
 		//return;
 		// Convert extention of file to extension that need for parser
 		$expention = $this->get_extension( $this->file_name );
@@ -243,28 +256,35 @@ class Excel2
 
 				// Read column
 				$column_data = $cell->getValue();
-				
+				/*if ($column_data != '') {
+
+                }*/
 				// If external column parser is specified
-				foreach ($this->column_parsers as $parser) 
-				{					
+				foreach ($this->column_parsers as $parser)
+				{
 					$column_data = call_user_func( $parser, $col, $column_data );
-				}	
+				}
 
 				// If specific column external parser is set
 				if( isset($this->column_validators[ $col ]) ) foreach ($this->column_validators[ $col ] as $parser)
 				{
 					// If validator returns false - step to next row
-					if( call_user_func( $parser, $column_data, $i ) === false ) continue 3;						
+					if( call_user_func( $parser, $column_data, $i ) === false ) continue 3;
 				}
-				
+
 				// If specific column external parser is set
-				if( isset($this->parsers_by_column[ $col ]) ) foreach ($this->parsers_by_column[ $col ] as $parser) 
+				if( isset($this->parsers_by_column[ $col ]) ) foreach ($this->parsers_by_column[ $col ] as $parser)
 				{
 					$column_data = call_user_func( $parser, $column_data );
 				}
-				
+
 				// Add column data to collection
-				$row[ $col ] = $column_data == null ? '' : $column_data;
+                if ($column_data != null && $column_data != '') {
+                    $row[$col] = $column_data;
+                } else {
+                    $row[$col] = '';
+                }
+				//$row[ $col ] = $column_data == null ? '' : $column_data;
 			}
 			
 			// If external column parser is specified
@@ -277,9 +297,15 @@ class Excel2
 		foreach ($this->material_parsers as $mp )
 		{
 			foreach ($all_rows as $row ) 
-			{				
+			{
 				$material = $mp->parse( $row, $i );
-			
+                if($material instanceof \samson\activerecord\Material)
+                {
+                    if (is_callable($mp->new_parser)) {
+                        call_user_func($mp->new_parser, $material, $row);
+                    }
+                }
+
 				// Iterate defined structure trees
 				if(isset($material)) foreach ( $mp->structures as $tree )
 				{
@@ -288,19 +314,24 @@ class Excel2
 					foreach ( $tree as $column )
 					{
 						// If desired column exists - use it's value
-						if( isset($row[ $column ]) ) $column = addslashes($row[ $column ]);
-							
-						$catalog_eval.= '["'.$column.'"]';
+						if( isset($row[ $column ]) ) {
+                            $column = addslashes($row[ $column ]);
+                        }
+                        if (!empty($column)) {
+                            $catalog_eval.= '["'.$column.'"]';
+                        }
+                        //trace($column);
 					}
 					$catalog_eval .= '[] = $material;';
-					eval($catalog_eval);
+                    //trace($catalog_eval);
+
+                    eval($catalog_eval);
 				}
 			}
 		}
-
 		// Build structure
-		SamsonCMS::structure_create( $this->catalog, array( $this->parent_structure ) );	
-		
+		SamsonCMS::structure_create( $this->catalog, array( $this->parent_structure ) );
+
 		return $all_rows;
 	}	
 }
