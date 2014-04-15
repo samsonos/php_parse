@@ -1,1 +1,11 @@
-{"name":"samsonos/samsonparser","author":"Vitaly Iegorov <egorov@samsonos.com>","version":"0.0.1","require":{"activerecord":"*.*.*","cmsapi":"*.*.*"}}
+{
+	"name":"samsonos/php_parse",
+	"author":"Vitaly Iegorov <egorov@samsonos.com>",
+	"version":"0.0.1",
+	"require":{
+		"samsonos/php_activerecord":"*",
+		"samsonos/cms_api":"*"
+	},
+	"license":"Open Software License (OSL) v 3.0",
+	"homepage":"http://samsonos.com/"
+	}
