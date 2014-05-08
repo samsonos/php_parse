@@ -1,5 +1,5 @@
-ActiveRecord # SamsonPHP 
+parse # SamsonPHP 
 
-Basic ORM module
+Parser module
 
 egorov@samsonos.com
