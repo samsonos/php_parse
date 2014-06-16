@@ -20,6 +20,17 @@ class Material extends ColumnParser
     /** Pass column index as arguments for material structure creation */
 	public function structure( $s_1, $s_2 = null, $s_3 = null, $s_4=null ){ $this->structures[] = func_get_args(); return $this; }
 
+    /** Initialize column parser */
+    public function init()
+    {
+        // Iterate material fields
+        foreach ( $this->fields as $f )
+        {
+            // Initialize parser
+            $f->init();
+        }
+    }
+
     /**
      * Add material field
      *
