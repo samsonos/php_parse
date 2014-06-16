@@ -52,16 +52,23 @@ class MaterialField extends ColumnParser
                 $newStructure = SamsonCMS::structure_find($structure);
             } elseif (is_int($structure)) { // Try to find by id
                 $newStructure = SamsonCMS::structure_find($structure, 'StructureID');
-            } elseif (is_object($structure)) {
-
             }
 
-            // Connect material field to structure
-            $sf = new \samson\activerecord\structurefield(false);
-            $sf->StructureID = $newStructure->StructureID;
-            $sf->FieldID = $this->db_field->id;
-            $sf->Active = 1;
-            $sf->save();
+            // If we have found parent structure for field
+            if (is_object($structure)) {
+                // Is this field is not connect with this structure already
+                $fields = null;
+                if(!dbQuery('structurefield')->StructureID($newStructure->StructureID)->FieldID($this->db_field->id)->exec($fields)){
+                    // Connect material field to structure
+                    $sf = new \samson\activerecord\structurefield(false);
+                    $sf->StructureID = $newStructure->StructureID;
+                    $sf->FieldID = $this->db_field->id;
+                    $sf->Active = 1;
+                    $sf->save();
+                }
+            } else { // Trigger error
+                e('Cannot find parent structure(##) for materialfield: ##', E_SAMSON_CMS_ERROR, array($structure, $field));
+            }
         }
 		
 		// Call parent 
