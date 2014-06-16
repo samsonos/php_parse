@@ -16,18 +16,22 @@ class MaterialField extends ColumnParser
 	/** Pointer to field table object */
 	protected $db_field; 	
 
+    /** @var bool Flag if this field is an image */
     protected $isimg;
-	/**
-	 * Constructor
-	 * @param integer 	$idx 		Column index for parsing
-	 * @param mixed 	$field		Field table object Name or Identifier	 
-	 * @param Material 	$material	Pointer to parent material parser
-	 * @param callable 	$parser		External parser routine		
-	 */
+
+    /**
+     * Constructor
+     *
+     * @param integer  $idx      Column index for parsing
+     * @param mixed    $field    Field table object Name or Identifier
+     * @param Material $material Pointer to parent material parser
+     * @param callable $parser   External parser routine
+     * @param null     $structure
+     */
 	public function __construct( $idx, $field, Material & $material, $parser = null, $structure = null)
 	{
         $this->isimg = false;
-        $newstructure = null;
+
 		// Save connection to material
 		$this->material = $material;
 		
@@ -38,14 +42,23 @@ class MaterialField extends ColumnParser
         } else {
             $this->db_field = SamsonCMS::field_create($field);
         }
+
+        // If parent structure is passed
         if (isset($structure)) {
+            /** @var \samson\cms\CMSNav $newstructure */
+            $newStructure = null;
+            // Try to find structure by name
             if (is_string($structure)) {
-                $newstructure = SamsonCMS::structure_find($structure);
-            } else {
-                $newstructure = SamsonCMS::structure_find($structure, 'StructureID');
+                $newStructure = SamsonCMS::structure_find($structure);
+            } elseif (is_int($structure)) { // Try to find by id
+                $newStructure = SamsonCMS::structure_find($structure, 'StructureID');
+            } elseif (is_object($structure)) {
+
             }
+
+            // Connect material field to structure
             $sf = new \samson\activerecord\structurefield(false);
-            $sf->StructureID = $newstructure->StructureID;
+            $sf->StructureID = $newStructure->StructureID;
             $sf->FieldID = $this->db_field->id;
             $sf->Active = 1;
             $sf->save();
@@ -56,18 +69,20 @@ class MaterialField extends ColumnParser
 	}
 	
 	/**
-	 * Ovveride standart uniqueness test as materialfield objects can dublicate
+	 * Override standard uniqueness test as materialfield objects can duplicate
 	 * @see \samson\parse\ColumnParser::isUnique()
 	 */
 	public function isUnique( $value ){ return true; }
-	
-	/**
-	 * Create materialfield record
-	 * @param strind $field_id		Field identifier in field table
-	 * @param string $material_id	Material identifier in material table
-	 * @param string $value			Field value for materialfield table
-	 * @return \samson\activerecord\materialfield MaterialField table object
-	 */
+
+    /**
+     * Create materialfield record
+     *
+     * @param string $value Field value for materialfield table
+     *
+     * @internal param \samson\parse\strind $field_id Field identifier in field table
+     * @internal param string $material_id Material identifier in material table
+     * @return \samson\activerecord\materialfield MaterialField table object
+     */
 	public function parser( $value )
 	{
         $mf = new \samson\activerecord\MaterialField(false);

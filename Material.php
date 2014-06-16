@@ -19,18 +19,21 @@ class Material extends ColumnParser
 
     /** Pass column index as arguments for material structure creation */
 	public function structure( $s_1, $s_2 = null, $s_3 = null, $s_4=null ){ $this->structures[] = func_get_args(); return $this; }
-	
-	/**
-	 * Add material field
-	 * @param integer 	$idx	Column index to parse
-	 * @param mixed 	$field 	Field table object Name or identifier
-	 * @param callable	$parser	External column parser
-	 * @return \samson\parse\Material Chaining
-	 */
+
+    /**
+     * Add material field
+     *
+     * @param integer  $idx    Column index to parse
+     * @param mixed    $field  Field table object Name or identifier
+     * @param callable $parser External column parser
+     * @param null     $structure
+     *
+     * @return \samson\parse\Material Chaining
+     */
 	public function field( $idx, $field, $parser = null, $structure = null )
 	{		
 		// Create materialfield table object parser 
-		$this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure = null);
+		$this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure);
 				
 		return $this;
 	}
@@ -41,13 +44,19 @@ class Material extends ColumnParser
 	 * @return \samson\parse\Material
 	 */
 	public function prefix( $url_prefix ){ $this->url_prefix = $url_prefix; return $this; }
-	
-	/**
-	 * Generic material table object parser
-	 * @param string $name Material name	
-	 * @see \samson\parse\ColumnParser::parser()
-	 * @return \samson\activerecord\material Material table object
-	 */
+
+    /**
+     * Generic material table object parser
+     *
+     * @param string $name Material name
+     * @param null   $url
+     * @param int    $published
+     * @param int    $active
+     * @param int    $user_id
+     *
+     * @see \samson\parse\ColumnParser::parser()
+     * @return \samson\activerecord\material Material table object
+     */
 	public function parser( $name, $url = null, $published = 1, $active = 1, $user_id = 1 )
 	{
         $m 				= new \samson\activerecord\material(false);

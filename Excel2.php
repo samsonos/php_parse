@@ -61,17 +61,6 @@ class Excel2
 		return $this;
 	}
 
-
-    public function createStructureField ($field)
-    {
-        $fieldID = dbQuery('\samson\cms\cmsfield')->Name($field)->first();
-        $sf = new \samson\activerecord\structurefield(false);
-        $sf->FieldID = $fieldID->FieldID;
-        $sf->StructureID = $this->parent_structure->StructureID;
-        $sf->Active = 1;
-        $sf->save();
-        return $this;
-    }
     /**
      * Set parent structure element to work when building catalog tree
      * @param $name
@@ -95,6 +84,17 @@ class Excel2
 		
 		return $this;
 	}
+
+    public function createStructureField ($field)
+    {
+        $fieldID = dbQuery('\samson\cms\cmsfield')->Name($field)->first();
+        $sf = new \samson\activerecord\structurefield(false);
+        $sf->FieldID = $fieldID->FieldID;
+        $sf->StructureID = $this->parent_structure->StructureID;
+        $sf->Active = 1;
+        $sf->save();
+        return $this;
+    }
 	
 	public function setRowParser( $parser )
 	{
