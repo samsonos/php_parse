@@ -7,11 +7,12 @@ require( __SAMSON_VENDOR_PATH.'phpoffice/PHPExcel/Classes/PHPExcel.php');
 
 use PHPExcel_Cell;
 use PHPExcel_IOFactory;
+use samson\activerecord\dbRelation;
 
 class Excel2
 {	
 	/** Default timelimit for parser execution */
-	const TIME_LIMIT = 30;	
+	const TIME_LIMIT = 300;
 	
 	/** Collection of external generic handler for row parsing */
 	public $row_parser = array();
@@ -42,6 +43,9 @@ class Excel2
 	
 	/** Array for material unuiqueness */
 	public $uniques = array();
+
+    /** Generic parser user */
+    public $user;
 	
 	/** Array of material parser objects */
 	protected $material_parsers = array();
@@ -164,10 +168,18 @@ class Excel2
 	}
 			
 	/** Constructor */
-	public function __construct( $file_name, $from_row = 0 )
+	public function __construct( $file_name, $from_row = 0, $userName = 'Parser')
 	{
 		$this->file_name = $file_name;
 		$this->from_row = $from_row;
+
+        // Try to find user for storing data into tables
+        if(!dbQuery('user')->FName($userName, dbRelation::LIKE)->first($this->user)) {
+            // Create new user object
+            $this->user = new \samson\activerecord\User(false);
+            $this->user->FName = $userName;
+            $this->user->save();
+        }
 	}	
 	
 	/**
@@ -195,6 +207,9 @@ class Excel2
 
     /**
      * Parse excel file and save each row in array
+     *
+     * @param bool $clear Flag for automatic parent structure clearing
+     *
      * @return array that contains arrays which contain one row
      */
 	public function parse($clear = true)

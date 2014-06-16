@@ -37,7 +37,7 @@ class SamsonCMS
 	 */
 	public static function structure_ids( \samson\cms\CMSNav $obj, & $struct_ids = array() )
 	{
-		foreach ($obj->children as $child )
+		foreach ($obj->children() as $child )
 		{
 			$struct_ids[] = $child->StructureID;
 	
@@ -147,11 +147,11 @@ class SamsonCMS
 	public static function structure_clear(\samson\cms\CMSNav $structure)
 	{		
 		$struct_ids = array( $structure->id );
-		
+
 		// get array that contain structure ids
 		self::structure_ids( $structure, $struct_ids );
-	
-		// If we have found nested structure ids
+
+        // If we have found nested structure ids
 		if( isset($struct_ids) )
 		{
 			// convert array to string, for prepare it to SQL query
@@ -162,19 +162,27 @@ class SamsonCMS
 				->StructureID($struct_ids)
 				->group_by('MaterialID')
 			->fields('MaterialID');
-	
-			// convert array to string, for prepare it to SQL query
-			$material_ids = implode (', ', $material_ids);
-	
-			// delete all old material			
-			db()->simple_query('DELETE FROM material WHERE MaterialID IN ('.$material_ids.')');
-            db()->simple_query('DELETE FROM gallery WHERE MaterialID IN ('.$material_ids.')');
-			db()->simple_query('DELETE FROM materialfield WHERE MaterialID IN ('.$material_ids.')');
-			db()->simple_query('DELETE FROM structure WHERE StructureID IN ('.$struct_ids.') AND StructureID != '.$structure->id);
+
+            // Clear all structures
+            db()->simple_query('DELETE FROM structure WHERE StructureID IN ('.$struct_ids.') AND StructureID != '.$structure->id);
+            // Clear all structure relations
             db()->simple_query('DELETE FROM structure_relation WHERE parent_id IN ('.$struct_ids.')');
-			db()->simple_query('DELETE FROM structurematerial WHERE MaterialID IN ('.$material_ids.')');
-            db()->simple_query('DELETE FROM related_materials WHERE first_material IN ('.$material_ids.')');
-            //db()->simple_query('DELETE FROM structurefield WHERE StructureID = '.$structure->id);
+            // Clear all structure field relations
+            db()->simple_query('DELETE FROM structurefield WHERE StructureID = '.$structure->id);
+
+            // If we have found materials
+            if(sizeof($material_ids)) {
+
+                // convert array to string, for prepare it to SQL query
+                $material_ids = implode (', ', $material_ids);
+
+                // delete all old material
+                db()->simple_query('DELETE FROM material WHERE MaterialID IN ('.$material_ids.')');
+                db()->simple_query('DELETE FROM gallery WHERE MaterialID IN ('.$material_ids.')');
+                db()->simple_query('DELETE FROM materialfield WHERE MaterialID IN ('.$material_ids.')');
+                db()->simple_query('DELETE FROM structurematerial WHERE MaterialID IN ('.$material_ids.')');
+                db()->simple_query('DELETE FROM related_materials WHERE first_material IN ('.$material_ids.')');
+            }
 		}		
 	}
 }
