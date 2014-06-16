@@ -32,22 +32,119 @@ class Material extends ColumnParser
     }
 
     /**
-     * Add material field
+     * Generic add material field parser to material parser
      *
-     * @param integer  $idx    Column index to parse
-     * @param mixed    $field  Field table object Name or identifier
-     * @param callable $parser External column parser
-     * @param null     $structure
+     * @param integer  $idx         Column index to parse
+     * @param mixed    $field       Field table object Name or identifier
+     * @param callable $parser      External column parser
+     * @param mixed    $structure   Structure object or Name or identifier
+     * @param string   $description Field description
+     * @param int      $type        Field type
      *
      * @return \samson\parse\Material Chaining
      */
-	public function field( $idx, $field, $parser = null, $structure = null )
+	public function field( $idx, $field, $parser = null, $structure = null, $description = '', $type = 0 )
 	{		
 		// Create materialfield table object parser 
-		$this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure);
+		$this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type);
 				
 		return $this;
 	}
+
+    /**
+     * Create WYSIWYG material field parser for material parser
+     *
+     * @param integer  $idx         Column index to parse
+     * @param mixed    $field       Field table object Name or identifier
+     * @param mixed    $structure   Structure object or Name or identifier
+     * @param callable $parser      External column parser
+     *
+     * @return \samson\parse\Material Chaining
+     */
+    public function wysiwyg($idx, $field, $structure = null, $parser = null)
+    {
+        // Create materialfield table object parser
+        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, '', 8);
+
+        return $this;
+    }
+
+    /**
+     * Create FILE material field parser for material parser
+     *
+     * @param integer  $idx         Column index to parse
+     * @param mixed    $field       Field table object Name or identifier
+     * @param mixed    $structure   Structure object or Name or identifier
+     * @param callable $parser      External column parser
+     * @param string   $description Field description
+     *
+     * @return \samson\parse\Material Chaining
+     */
+    public function file($idx, $field, $structure = null, $parser = null, $description = '')
+    {
+        // Create materialfield table object parser
+        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 1);
+
+        return $this;
+    }
+
+    /**
+     * Create enumerable material field parser for material parser
+     *
+     * @param integer  $idx         Column index to parse
+     * @param mixed    $field       Field table object Name or identifier
+     * @param mixed    $structure   Structure object or Name or identifier
+     * @param callable $parser      External column parser
+     * @param string   $description Field description
+     *
+     * @return \samson\parse\Material Chaining
+     */
+    public function numeric($idx, $field, $structure = null, $parser = null,  $description = '')
+    {
+        // Create materialfield table object parser
+        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 7);
+
+        return $this;
+    }
+
+    /**
+     * Create DATE material field parser for material parser
+     *
+     * @param integer  $idx         Column index to parse
+     * @param mixed    $field       Field table object Name or identifier
+     * @param mixed    $structure   Structure object or Name or identifier
+     * @param callable $parser      External column parser
+     * @param string   $description Field description
+     *
+     * @return \samson\parse\Material Chaining
+     */
+    public function date($idx, $field, $structure = null, $parser = null,  $description = '')
+    {
+        // Create materialfield table object parser
+        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 3);
+
+        return $this;
+    }
+
+    /**
+     * Create selectable material field parser for material parser
+     *
+     * @param integer  $idx         Column index to parse
+     * @param mixed    $field       Field table object Name or identifier
+     * @param string   $value       Field select options with desctriptions
+     * @param mixed    $structure   Structure object or Name or identifier
+     * @param callable $parser      External column parser
+     * @param string   $description Field description
+     *
+     * @return \samson\parse\Material Chaining
+     */
+    public function select($idx, $field, $value, $structure = null, $parser = null, $description = '')
+    {
+        // Create materialfield table object parser
+        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 4, $value );
+
+        return $this;
+    }
 	
 	/**
 	 * Set generic url prefix

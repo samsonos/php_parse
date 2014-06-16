@@ -25,6 +25,12 @@ class MaterialField extends ColumnParser
     /** @var string Field name */
     protected $name;
 
+    /** @var  Default field value */
+    protected $defaultValue;
+
+    /** @var  Field type */
+    protected $type;
+
     /** @var string Field description */
     protected $description;
 
@@ -37,8 +43,10 @@ class MaterialField extends ColumnParser
      * @param callable $parser      External parser routine
      * @param null     $structure   Structure name or object
      * @param string   $description Field description
+     * @param int      $type        Field type
+     * @param string   $value       Field default value
      */
-	public function __construct( $idx, $name, Material & $material, $parser = null, $structure = null, $description = '')
+	public function __construct( $idx, $name, Material & $material, $parser = null, $structure = null, $description = '', $type = 0, $value = null)
 	{
         // WTF?
         $this->isimg = false;
@@ -47,23 +55,34 @@ class MaterialField extends ColumnParser
 		$this->material = $material;
 
         // Save all passed data
-        $this->entity = $name;
+        $this->name = $name;
         $this->description = $description;
         $this->parentStructure = $structure;
+        $this->type = $type;
+        $this->defaultValue = $value;
 		
 		// Call parent 
 		parent::__construct( $idx, $parser );
-	}
+        $this->type = $type;
+    }
 
     /** Override generic column parser initialization */
     public function init()
     {
+        // This is very important
+        if (!isset($this->name{0})) {
+           return e('Cannot create MaterialField - no name is passed', E_SAMSON_FATAL_ERROR);
+        }
+
         // Try to find field record
         if (!SamsonCMS::find('field', $this->name, $this->db_field)) {
             // Create new field record
             $this->db_field = new \samson\activerecord\field(false);
             $this->db_field->Name = $this->name;
             $this->db_field->Active = 1;
+            $this->db_field->Description = $this->description;
+            $this->db_field->Value = $this->defaultValue;
+            $this->db_field->Type = $this->type;
             $this->db_field->save();
         }
 
@@ -88,7 +107,7 @@ class MaterialField extends ColumnParser
 	 * Override standard uniqueness test as materialfield objects can duplicate
 	 * @see \samson\parse\ColumnParser::isUnique()
 	 */
-	public function isUnique( $value ){ return true; }
+	public function isUnique($value){ return true; }
 
     /**
      * Create materialfield record
@@ -99,7 +118,7 @@ class MaterialField extends ColumnParser
      * @internal param string $material_id Material identifier in material table
      * @return \samson\activerecord\materialfield MaterialField table object
      */
-	public function parser( $value )
+	public function parser($value)
 	{
         $mf = new \samson\activerecord\MaterialField(false);
         $mf->FieldID 		= $this->db_field->id;
