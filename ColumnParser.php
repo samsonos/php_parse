@@ -26,16 +26,23 @@ abstract class ColumnParser
     /** bool value for checking parent */
     protected $hasParent;
 
-	/**
-	 * Constuctor 
-	 * @param integer 	$name_column 	Index of main column to parse
-	 * @param callable 	$parser			External parser function	
-	 */
+    /**
+     * Constuctor
+     *
+     * @param          $idx
+     * @param callable $parser External parser function
+     * @param bool     $parent
+     *
+     * @internal param int $name_column Index of main column to parse
+     */
 	public function __construct( $idx, $parser = null, $parent = false)
 	{		
 		// Set main column index
 		$this->idx = $idx;
+
+        //
         $this->hasParent = $parent;
+
 		// Check parser routine
 		if( isset($parser))
 		{
@@ -53,6 +60,14 @@ abstract class ColumnParser
 	 * @return \samson\activerecord\dbRecord New object
 	 */
 	protected abstract function parser( $value );
+
+    /**
+     * Initialize column parser
+     */
+    public function init()
+    {
+
+    }
 	
 	/**
 	 * Generic object creation unique test
@@ -121,38 +136,13 @@ abstract class ColumnParser
                 if( $this->object instanceof \samson\activerecord\dbRecord )
                 {
                     return $this->success( $data, $row_idx );
+
+                } else {
+                    return e('Cannot parse row ##, Object has not been created!',E_SAMSON_FATAL_ERROR, $row_idx );
                 }
-                else return e('Cannot parse row ##, Object has not been created!',E_SAMSON_FATAL_ERROR, $row_idx );
-            }/* else if (!$this->isUnique($value) && $value != '' && $this->hasParent) {
+            }
 
-                $parentmaterial = dbQuery('\samson\cms\cmsmaterial')->like('Name', $value)->first();
-                $this->object = $this->parser( $value );
-
-                $rm = new \samson\activerecord\related_materials(false);
-                $rm->first_material = $parentmaterial->MaterialID;
-                $rm->second_material = $this->object->id;
-                $rm->save();
-
-                $material = dbQuery('\samson\cms\cmsmaterial')->MaterialID($this->object->id)->first();
-                $material->Url = $material->Url.'-'.generate_password(4);
-                $material->save();
-
-                $struct = dbQuery('\samson\cms\cmsnav')->like('Name', 'Каталог')->first();
-                $sm = new \samson\activerecord\structurematerial(false);
-                $sm->MaterialID = $this->object->id;
-                $sm->StructureID = $struct->StructureID;
-                $sm->save();
-
-                // If table object succesfully created
-                if( $this->object instanceof \samson\activerecord\dbRecord )
-                {
-                    return $this->success( $data, $row_idx );
-                }
-                else return e('Cannot parse row ##, Object has not been created!',E_SAMSON_FATAL_ERROR, $row_idx );
-            }*/
-        }
-		else
-		{
+        } else{
 			trace($data);
 			return e('Cannot parse row ##, Main column ## does not exists', E_SAMSON_FATAL_ERROR, array($row_idx,$this->idx));
 		}

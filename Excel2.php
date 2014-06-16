@@ -313,6 +313,10 @@ class Excel2
 		// Perform material parsing
 		foreach ($this->material_parsers as $mp )
 		{
+            // Initialize column parser
+            $mp->init();
+
+            // Iterate all gathered valid rows
 			foreach ($all_rows as $row ) 
 			{
 				$material = $mp->parse( $row, $i );
