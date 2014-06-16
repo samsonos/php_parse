@@ -34,40 +34,27 @@ class MaterialField extends ColumnParser
 
 		// Save connection to material
 		$this->material = $material;
-		
-		// Get field table object
-        if (SamsonCMS::field_find( $field ) || SamsonCMS::field_find( $field, 'FieldID' )) {
-            if( is_string($field) ) $this->db_field = SamsonCMS::field_find( $field );
-            else $this->db_field = SamsonCMS::field_find( $field, 'FieldID' );
-        } else {
-            $this->db_field = SamsonCMS::field_create($field);
+
+        // Try to find field record
+        if (!SamsonCMS::find('field', $field, $this->db_field)) {
+            // Create new field record
+            $this->db_field = new \samson\activerecord\field(false);
+            $this->db_field->Name = $field;
+            $this->db_field->Active = 1;
+            $this->db_field->save();
         }
 
-        // If parent structure is passed
-        if (isset($structure)) {
-            /** @var \samson\cms\CMSNav $newstructure */
-            $newStructure = null;
-            // Try to find structure by name
-            if (is_string($structure)) {
-                $newStructure = SamsonCMS::structure_find($structure);
-            } elseif (is_int($structure)) { // Try to find by id
-                $newStructure = SamsonCMS::structure_find($structure, 'StructureID');
-            }
-
-            // If we have found parent structure for field
-            if (is_object($structure)) {
-                // Is this field is not connect with this structure already
-                $fields = null;
-                if(!dbQuery('structurefield')->StructureID($newStructure->StructureID)->FieldID($this->db_field->id)->exec($fields)){
-                    // Connect material field to structure
-                    $sf = new \samson\activerecord\structurefield(false);
-                    $sf->StructureID = $newStructure->StructureID;
-                    $sf->FieldID = $this->db_field->id;
-                    $sf->Active = 1;
-                    $sf->save();
-                }
-            } else { // Trigger error
-                e('Cannot find parent structure(##) for materialfield: ##', E_SAMSON_CMS_ERROR, array($structure, $field));
+        // Try to find structure
+        if (!SamsonCMS::find('structure', $structure, $structure)) {
+            // Is this field is not connect with this structure already
+            $fields = null;
+            if(!dbQuery('structurefield')->StructureID($structure->StructureID)->FieldID($this->db_field->id)->exec($fields)){
+                // Connect material field to structure
+                $sf = new \samson\activerecord\structurefield(false);
+                $sf->StructureID = $structure->StructureID;
+                $sf->FieldID = $this->db_field->id;
+                $sf->Active = 1;
+                $sf->save();
             }
         }
 		

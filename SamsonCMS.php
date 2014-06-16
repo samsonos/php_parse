@@ -3,18 +3,82 @@ namespace samson\parse;
 
 class SamsonCMS
 {
-	/**
-	 * 
-	 * @param unknown $name
-	 */
+    /**
+     * Generic SamsonCMS database entity finder
+     * @param string    $entity             Database entity full name
+     * @param mixed     $searchParameter    Database parameter value for search
+     * @param \samson\activerecord\dbRecord $returnValue On success found database record
+     *
+     * @return bool True if database record is found
+     */
+    public static function find($entity, & $searchParameter, & $returnValue = null)
+    {
+        $entity = '\samson\cms\cmsfield';
+        switch(gettype($searchParameter)) {
+            case 'null': return false;
+            case 'string':  return dbQuery($entity)->cond('Name', $searchParameter )->first($returnValue);
+            case 'integer': return dbQuery($entity)->cond('FieldID', $searchParameter )->first($returnValue);
+            case 'object':  $returnValue = & $searchParameter; return true;
+            default: return e('Cannot find ## record using ##', E_SAMSON_ACTIVERECORD_ERROR, array($entity, $searchParameter));
+        }
+    }
+
+    /**
+     * Find field record
+     * @param string $name  Search parameter value
+     * @param string $field Search parameter name
+     *
+     * @return \samson\activerecord\field Structure record
+     */
 	public static function field_find( $name, $field = 'Name' )
 	{
 		return dbQuery('\samson\cms\cmsfield')->cond( $field, $name )->first();
 	}
+
+    /**
+     * Find structure record
+     * @param string $name  Search parameter value
+     * @param string $field Search parameter name
+     *
+     * @return \samson\activerecord\structure Structure record
+     */
     public static function structure_find( $name, $field = 'Name' )
     {
         return dbQuery('\samson\cms\cmsnav')->cond( $field, $name )->first();
     }
+
+    /**
+     * Find structurefield record
+     * @param string $name  Search parameter value
+     * @param string $field Search parameter name
+     *
+     * @return \samson\activerecord\structurefield StructureField record
+     */
+    public static function structurefield_find( $name, $field = 'Name' )
+    {
+        return dbQuery('\samson\cms\cmsnavfield')->cond( $field, $name )->first();
+    }
+
+    /**
+     * Create structurefield database record
+     * @param \samson\activerecord\structure $structure Pointer to structure record
+     * @param \samson\activerecord\field     $field     Pointer to field record
+     *
+     * @return \samson\activerecord\structurefield Create StructureField record
+     */
+    public static function structurefield_create(\samson\activerecord\structure $structure, \samson\activerecord\field & $field)
+    {
+        // Connect material field to structure
+        $sf = new \samson\activerecord\structurefield(false);
+        $sf->StructureID = $structure->StructureID;
+        $sf->FieldID = $field->id;
+        $sf->Active = 1;
+        $sf->save();
+
+        return $sf;
+    }
+
+
 	/**
 	 * Create field table object
 	 * @param string $name Field name
@@ -44,20 +108,6 @@ class SamsonCMS
 			self::structure_ids( $child, $struct_ids );
 		}
 	}
-    function related_url()
-    {
-        return array(
-            'kraska'		   =>	'coloring',
-            'osvetlitel-volos' =>	'clarification',
-            'yhod-za-volosami' =>	'hair-care',
-            'lak'		       =>	'laying',
-            'okislitel'		   =>	'oxidants',
-            'himzavivka'	   =>	'perm',
-            'yhod-za-telom'	   =>	'body-care',
-            'antistatik'	   =>	'antistatic',
-            'himija'	       =>	'household-chemicals'
-        );
-    }
 
     /**
      * Recursively create CMSNavigation tree and relations with materials
