@@ -58,12 +58,15 @@ class SamsonCMS
             'himija'	       =>	'household-chemicals'
         );
     }
-	/**
-	 * Recursively create CMSNavigation tree and relations with materials
-	 * @param string $nested_a 	CMSNav tree
-	 * @param array $parents	Array of CMSNavs parents chain
-	 */
-	public static function structure_create( $nested_a, array $parents = array() )
+
+    /**
+     * Recursively create CMSNavigation tree and relations with materials
+     *
+     * @param string $nested_a CMSNav tree
+     * @param array  $parents  Array of CMSNavs parents chain
+     * @param null   $user
+     */
+	public static function structure_create( $nested_a, array $parents = array(), & $user = null )
 	{
 		// Iterate structures array
 		foreach ( $nested_a as $k => $v )
@@ -74,38 +77,26 @@ class SamsonCMS
                 /** @var \samson\activerecord\Structure $s */
                 $s = null;
                 $url = utf8_translit($k);
-                if ($url == 'master-lux') {
-                    $url = 'master_lux';
-                } else if ($url == 'florex-super') {
-                    $url = 'florex';
-                }
+
+                // Try to find structure by url
                 if (!dbQuery('structure')->Active(1)->Url($url)->first($s)){
 
+                    // Create new structure
                     $s = new \samson\activerecord\Structure(false);
                     $s->Name = $k;
                     $s->Active = 1;
                     $s->Url = $url;
-                    /*if (isset($related_url[$url])) {
-                        $newUrl = $related_url[$url];
-                        $s->Url = $newUrl;
-                    } else {
+                    $s->UserID = $user->id;
 
-                    }*/
                     // Save structure to db
                     $s->save();
-                    /*if (isset($related_url[$url])) {
-                        $str_related = new \samson\activerecord\structure_relation(false);
-                        $str_related->parent_id = 1;
-                        $str_related->child_id = $s->id;
-                        $str_related->save();
-                    }*/
                 }
 
                 // If parents chain is specified and has data
                 if( sizeof( $parents ) )
                 {
                     // Get last element from parents chain
-                    $parent = end( $parents  );
+                    $parent = end($parents);
 
                     /** @var \samson\activerecord\structure_relation $str_related */
                     if ($parent->id != $s->id) {
@@ -120,7 +111,7 @@ class SamsonCMS
                 array_push( $parents, $s );
 
                 // Recursion
-                self::structure_create( $v, $parents );
+                self::structure_create( $v, $parents, $user );
 
                 // Remove added element from parents chain
                 array_pop( $parents );

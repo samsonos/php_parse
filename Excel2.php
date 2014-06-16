@@ -86,6 +86,8 @@ class Excel2
 			$cmsnav = new \samson\cms\cmsnav(false);
 			$cmsnav->Name = $name;
 			$cmsnav->Url = utf8_translit($name);
+            $cmsnav->Active = 1;
+            $cmsnav->UserID = $thid->user->id;
 			$cmsnav->save();
 		}
 		
@@ -345,7 +347,7 @@ class Excel2
 			}
 		}
 		// Build structure
-		SamsonCMS::structure_create( $this->catalog, array( $this->parent_structure ) );
+		SamsonCMS::structure_create( $this->catalog, array( $this->parent_structure ), $this->user );
 
 		return $all_rows;
 	}	
