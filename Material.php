@@ -52,6 +52,25 @@ class Material extends ColumnParser
 	}
 
     /**
+     * Create STRING material field parser for material parser
+     *
+     * @param integer  $idx         Column index to parse
+     * @param mixed    $field       Field table object Name or identifier
+     * @param mixed    $structure   Structure object or Name or identifier
+     * @param callable $parser      External column parser
+     * @param string   $description Field description
+     *
+     * @return \samson\parse\Material Chaining
+     */
+    public function string($idx, $field, $structure = null, $parser = null, $description = '')
+    {
+        // Create materialfield table object parser
+        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 0);
+
+        return $this;
+    }
+
+    /**
      * Create WYSIWYG material field parser for material parser
      *
      * @param integer  $idx         Column index to parse

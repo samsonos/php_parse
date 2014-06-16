@@ -76,7 +76,7 @@ class Excel2
 			$cmsnav->Name = $name;
 			$cmsnav->Url = utf8_translit($name);
             $cmsnav->Active = 1;
-            $cmsnav->UserID = $thid->user->id;
+            $cmsnav->UserID = $this->user->id;
 			$cmsnav->save();
 		}
 		
@@ -109,7 +109,7 @@ class Excel2
 	}
 	
 	/**
-	 * Set array of structure tree logic specefying columns numbers
+	 * Set array of structure tree logic specifying columns numbers
 	 * Function accepts as much arguments as column array definition,
 	 * this columns values will be used to build catalog of materials
 	 *  
