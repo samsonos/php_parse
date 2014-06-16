@@ -45,7 +45,7 @@ class MaterialField extends ColumnParser
         }
 
         // Try to find structure
-        if (!SamsonCMS::find('structure', $structure, $structure)) {
+        if (SamsonCMS::find('structure', $structure, $structure)) {
             // Is this field is not connect with this structure already
             $fields = null;
             if(!dbQuery('structurefield')->StructureID($structure->StructureID)->FieldID($this->db_field->id)->exec($fields)){

@@ -13,9 +13,8 @@ class SamsonCMS
      */
     public static function find($entity, & $searchParameter, & $returnValue = null)
     {
-        $entity = '\samson\cms\cmsfield';
         switch(gettype($searchParameter)) {
-            case 'null': return false;
+            case 'null':    return false;
             case 'string':  return dbQuery($entity)->cond('Name', $searchParameter )->first($returnValue);
             case 'integer': return dbQuery($entity)->cond('FieldID', $searchParameter )->first($returnValue);
             case 'object':  $returnValue = & $searchParameter; return true;
