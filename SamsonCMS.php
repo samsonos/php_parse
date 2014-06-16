@@ -205,6 +205,12 @@ class SamsonCMS
 
             // Get array of fields connected to this structures
             $field_ids = dbQuery('structurefield')->StructureID($struct_ids)->group_by('FieldID')->fields('FieldID');
+            if (sizeof($field_ids)) {
+                // convert array to string, for prepare it to SQL query
+                $field_ids = implode (', ', $field_ids);
+                // Clear all fields
+                db()->simple_query('DELETE FROM field WHERE FieldID IN ('.$field_ids.')');
+            }
 
             // Clear all structures
             db()->simple_query('DELETE FROM structure WHERE StructureID IN ('.$struct_ids.') AND StructureID != '.$structure->id);
@@ -212,8 +218,7 @@ class SamsonCMS
             db()->simple_query('DELETE FROM structure_relation WHERE parent_id IN ('.$struct_ids.')');
             // Clear all structure field relations
             db()->simple_query('DELETE FROM structurefield WHERE StructureID = '.$structure->id);
-            // Clear all fields
-            db()->simple_query('DELETE FROM field WHERE FieldID IN ('.$field_ids.')');
+
 
 
             // If we have found materials
