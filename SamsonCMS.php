@@ -3,18 +3,81 @@ namespace samson\parse;
 
 class SamsonCMS
 {
-	/**
-	 * 
-	 * @param unknown $name
-	 */
+    /**
+     * Generic SamsonCMS database entity finder
+     * @param string    $entity             Database entity full name
+     * @param mixed     $searchParameter    Database parameter value for search
+     * @param \samson\activerecord\dbRecord $returnValue On success found database record
+     *
+     * @return bool True if database record is found
+     */
+    public static function find($entity, & $searchParameter, & $returnValue = null)
+    {
+        switch(gettype($searchParameter)) {
+            case 'null':    return false;
+            case 'string':  return dbQuery($entity)->cond('Name', $searchParameter )->first($returnValue);
+            case 'integer': return dbQuery($entity)->cond('FieldID', $searchParameter )->first($returnValue);
+            case 'object':  $returnValue = & $searchParameter; return true;
+            default: return e('Cannot find ## record using ##', E_SAMSON_ACTIVERECORD_ERROR, array($entity, $searchParameter));
+        }
+    }
+
+    /**
+     * Find field record
+     * @param string $name  Search parameter value
+     * @param string $field Search parameter name
+     *
+     * @return \samson\activerecord\field Structure record
+     */
 	public static function field_find( $name, $field = 'Name' )
 	{
 		return dbQuery('\samson\cms\cmsfield')->cond( $field, $name )->first();
 	}
+
+    /**
+     * Find structure record
+     * @param string $name  Search parameter value
+     * @param string $field Search parameter name
+     *
+     * @return \samson\activerecord\structure Structure record
+     */
     public static function structure_find( $name, $field = 'Name' )
     {
         return dbQuery('\samson\cms\cmsnav')->cond( $field, $name )->first();
     }
+
+    /**
+     * Find structurefield record
+     * @param string $name  Search parameter value
+     * @param string $field Search parameter name
+     *
+     * @return \samson\activerecord\structurefield StructureField record
+     */
+    public static function structurefield_find( $name, $field = 'Name' )
+    {
+        return dbQuery('\samson\cms\cmsnavfield')->cond( $field, $name )->first();
+    }
+
+    /**
+     * Create structurefield database record
+     * @param \samson\activerecord\structure $structure Pointer to structure record
+     * @param \samson\activerecord\field     $field     Pointer to field record
+     *
+     * @return \samson\activerecord\structurefield Create StructureField record
+     */
+    public static function structurefield_create(\samson\activerecord\structure $structure, \samson\activerecord\field & $field)
+    {
+        // Connect material field to structure
+        $sf = new \samson\activerecord\structurefield(false);
+        $sf->StructureID = $structure->StructureID;
+        $sf->FieldID = $field->id;
+        $sf->Active = 1;
+        $sf->save();
+
+        return $sf;
+    }
+
+
 	/**
 	 * Create field table object
 	 * @param string $name Field name
@@ -37,33 +100,22 @@ class SamsonCMS
 	 */
 	public static function structure_ids( \samson\cms\CMSNav $obj, & $struct_ids = array() )
 	{
-		foreach ($obj->children as $child )
+		foreach ($obj->children() as $child )
 		{
 			$struct_ids[] = $child->StructureID;
 	
 			self::structure_ids( $child, $struct_ids );
 		}
 	}
-    function related_url()
-    {
-        return array(
-            'kraska'		   =>	'coloring',
-            'osvetlitel-volos' =>	'clarification',
-            'yhod-za-volosami' =>	'hair-care',
-            'lak'		       =>	'laying',
-            'okislitel'		   =>	'oxidants',
-            'himzavivka'	   =>	'perm',
-            'yhod-za-telom'	   =>	'body-care',
-            'antistatik'	   =>	'antistatic',
-            'himija'	       =>	'household-chemicals'
-        );
-    }
-	/**
-	 * Recursively create CMSNavigation tree and relations with materials
-	 * @param string $nested_a 	CMSNav tree
-	 * @param array $parents	Array of CMSNavs parents chain
-	 */
-	public static function structure_create( $nested_a, array $parents = array() )
+
+    /**
+     * Recursively create CMSNavigation tree and relations with materials
+     *
+     * @param string $nested_a CMSNav tree
+     * @param array  $parents  Array of CMSNavs parents chain
+     * @param null   $user
+     */
+	public static function structure_create( $nested_a, array $parents = array(), & $user = null )
 	{
 		// Iterate structures array
 		foreach ( $nested_a as $k => $v )
@@ -74,38 +126,26 @@ class SamsonCMS
                 /** @var \samson\activerecord\Structure $s */
                 $s = null;
                 $url = utf8_translit($k);
-                if ($url == 'master-lux') {
-                    $url = 'master_lux';
-                } else if ($url == 'florex-super') {
-                    $url = 'florex';
-                }
+
+                // Try to find structure by url
                 if (!dbQuery('structure')->Active(1)->Url($url)->first($s)){
 
+                    // Create new structure
                     $s = new \samson\activerecord\Structure(false);
                     $s->Name = $k;
                     $s->Active = 1;
                     $s->Url = $url;
-                    /*if (isset($related_url[$url])) {
-                        $newUrl = $related_url[$url];
-                        $s->Url = $newUrl;
-                    } else {
+                    $s->UserID = $user->id;
 
-                    }*/
                     // Save structure to db
                     $s->save();
-                    /*if (isset($related_url[$url])) {
-                        $str_related = new \samson\activerecord\structure_relation(false);
-                        $str_related->parent_id = 1;
-                        $str_related->child_id = $s->id;
-                        $str_related->save();
-                    }*/
                 }
 
                 // If parents chain is specified and has data
                 if( sizeof( $parents ) )
                 {
                     // Get last element from parents chain
-                    $parent = end( $parents  );
+                    $parent = end($parents);
 
                     /** @var \samson\activerecord\structure_relation $str_related */
                     if ($parent->id != $s->id) {
@@ -120,7 +160,7 @@ class SamsonCMS
                 array_push( $parents, $s );
 
                 // Recursion
-                self::structure_create( $v, $parents );
+                self::structure_create( $v, $parents, $user );
 
                 // Remove added element from parents chain
                 array_pop( $parents );
@@ -147,11 +187,11 @@ class SamsonCMS
 	public static function structure_clear(\samson\cms\CMSNav $structure)
 	{		
 		$struct_ids = array( $structure->id );
-		
+
 		// get array that contain structure ids
 		self::structure_ids( $structure, $struct_ids );
-	
-		// If we have found nested structure ids
+
+        // If we have found nested structure ids
 		if( isset($struct_ids) )
 		{
 			// convert array to string, for prepare it to SQL query
@@ -162,19 +202,38 @@ class SamsonCMS
 				->StructureID($struct_ids)
 				->group_by('MaterialID')
 			->fields('MaterialID');
-	
-			// convert array to string, for prepare it to SQL query
-			$material_ids = implode (', ', $material_ids);
-	
-			// delete all old material			
-			db()->simple_query('DELETE FROM material WHERE MaterialID IN ('.$material_ids.')');
-            db()->simple_query('DELETE FROM gallery WHERE MaterialID IN ('.$material_ids.')');
-			db()->simple_query('DELETE FROM materialfield WHERE MaterialID IN ('.$material_ids.')');
-			db()->simple_query('DELETE FROM structure WHERE StructureID IN ('.$struct_ids.') AND StructureID != '.$structure->id);
+
+            // Get array of fields connected to this structures
+            $field_ids = dbQuery('structurefield')->StructureID($struct_ids)->group_by('FieldID')->fields('FieldID');
+            if (sizeof($field_ids)) {
+                // convert array to string, for prepare it to SQL query
+                $field_ids = implode (', ', $field_ids);
+                // Clear all fields
+                db()->simple_query('DELETE FROM field WHERE FieldID IN ('.$field_ids.')');
+            }
+
+            // Clear all structures
+            db()->simple_query('DELETE FROM structure WHERE StructureID IN ('.$struct_ids.') AND StructureID != '.$structure->id);
+            // Clear all structure relations
             db()->simple_query('DELETE FROM structure_relation WHERE parent_id IN ('.$struct_ids.')');
-			db()->simple_query('DELETE FROM structurematerial WHERE MaterialID IN ('.$material_ids.')');
-            db()->simple_query('DELETE FROM related_materials WHERE first_material IN ('.$material_ids.')');
-            //db()->simple_query('DELETE FROM structurefield WHERE StructureID = '.$structure->id);
+            // Clear all structure field relations
+            db()->simple_query('DELETE FROM structurefield WHERE StructureID = '.$structure->id);
+
+
+
+            // If we have found materials
+            if(sizeof($material_ids)) {
+
+                // convert array to string, for prepare it to SQL query
+                $material_ids = implode (', ', $material_ids);
+
+                // delete all old material
+                db()->simple_query('DELETE FROM material WHERE MaterialID IN ('.$material_ids.')');
+                db()->simple_query('DELETE FROM gallery WHERE MaterialID IN ('.$material_ids.')');
+                db()->simple_query('DELETE FROM materialfield WHERE MaterialID IN ('.$material_ids.')');
+                db()->simple_query('DELETE FROM structurematerial WHERE MaterialID IN ('.$material_ids.')');
+                db()->simple_query('DELETE FROM related_materials WHERE first_material IN ('.$material_ids.')');
+            }
 		}		
 	}
 }

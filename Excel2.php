@@ -7,11 +7,12 @@ require( __SAMSON_VENDOR_PATH.'phpoffice/PHPExcel/Classes/PHPExcel.php');
 
 use PHPExcel_Cell;
 use PHPExcel_IOFactory;
+use samson\activerecord\dbRelation;
 
 class Excel2
 {	
 	/** Default timelimit for parser execution */
-	const TIME_LIMIT = 30;	
+	const TIME_LIMIT = 300;
 	
 	/** Collection of external generic handler for row parsing */
 	public $row_parser = array();
@@ -42,6 +43,9 @@ class Excel2
 	
 	/** Array for material unuiqueness */
 	public $uniques = array();
+
+    /** Generic parser user */
+    public $user;
 	
 	/** Array of material parser objects */
 	protected $material_parsers = array();
@@ -56,18 +60,6 @@ class Excel2
 		$this->material_parsers[] = $m;		
 		return $this;
 	}
-
-
-    public function createStructureField ($field)
-    {
-        $fieldID = dbQuery('\samson\cms\cmsfield')->Name($field)->first();
-        $sf = new \samson\activerecord\structurefield(false);
-        $sf->FieldID = $fieldID->FieldID;
-        $sf->StructureID = $this->parent_structure->StructureID;
-        $sf->Active = 1;
-        $sf->save();
-        return $this;
-    }
 
     /**
      * Set parent structure element to work when building catalog tree
@@ -84,7 +76,7 @@ class Excel2
 			$cmsnav->Name = $name;
 			$cmsnav->Url = utf8_translit($name);
             $cmsnav->Active = 1;
-            $cmsnav->UserID = $thid->user->id;
+            $cmsnav->UserID = $this->user->id;
 			$cmsnav->save();
 		}
 		
@@ -92,6 +84,17 @@ class Excel2
 		
 		return $this;
 	}
+
+    public function createStructureField ($field)
+    {
+        $fieldID = dbQuery('\samson\cms\cmsfield')->Name($field)->first();
+        $sf = new \samson\activerecord\structurefield(false);
+        $sf->FieldID = $fieldID->FieldID;
+        $sf->StructureID = $this->parent_structure->StructureID;
+        $sf->Active = 1;
+        $sf->save();
+        return $this;
+    }
 	
 	public function setRowParser( $parser )
 	{
@@ -106,7 +109,7 @@ class Excel2
 	}
 	
 	/**
-	 * Set array of structure tree logic specefying columns numbers
+	 * Set array of structure tree logic specifying columns numbers
 	 * Function accepts as much arguments as column array definition,
 	 * this columns values will be used to build catalog of materials
 	 *  
@@ -167,10 +170,18 @@ class Excel2
 	}
 			
 	/** Constructor */
-	public function __construct( $file_name, $from_row = 0 )
+	public function __construct( $file_name, $from_row = 0, $userName = 'Parser')
 	{
 		$this->file_name = $file_name;
 		$this->from_row = $from_row;
+
+        // Try to find user for storing data into tables
+        if(!dbQuery('user')->FName($userName, dbRelation::LIKE)->first($this->user)) {
+            // Create new user object
+            $this->user = new \samson\activerecord\User(false);
+            $this->user->FName = $userName;
+            $this->user->save();
+        }
 	}	
 	
 	/**
@@ -198,6 +209,9 @@ class Excel2
 
     /**
      * Parse excel file and save each row in array
+     *
+     * @param bool $clear Flag for automatic parent structure clearing
+     *
      * @return array that contains arrays which contain one row
      */
 	public function parse($clear = true)
@@ -299,6 +313,10 @@ class Excel2
 		// Perform material parsing
 		foreach ($this->material_parsers as $mp )
 		{
+            // Initialize column parser
+            $mp->init();
+
+            // Iterate all gathered valid rows
 			foreach ($all_rows as $row ) 
 			{
 				$material = $mp->parse( $row, $i );
@@ -332,9 +350,8 @@ class Excel2
 				}
 			}
 		}
-
 		// Build structure
-		SamsonCMS::structure_create( $this->catalog, array( $this->parent_structure ) );
+		SamsonCMS::structure_create( $this->catalog, array( $this->parent_structure ), $this->user );
 
 		return $all_rows;
 	}	
