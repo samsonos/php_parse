@@ -163,6 +163,11 @@ class Material extends ColumnParser
 
         return $this;
     }
+
+    public function gallery($idx)
+    {
+
+    }
 	
 	/**
 	 * Set generic url prefix
