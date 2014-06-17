@@ -50,10 +50,10 @@ class Material extends ColumnParser
             // Iterate localized columns
             foreach ($idx as $locale => $column) {
                 // Create materialfield table object parser
-                $this->fields[$column] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type, $value, $locale);
+                $this->fields[$column] = new MaterialField($column, $field, $this, $parser, $structure, $description, $type, $value, $locale);
             }
         } else { // Not localized material
-            $this->fields[$idx] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type, $value);
+            $this->fields[$idx] = new MaterialField($idx, $field, $this, $parser, $structure, $description, $type, $value);
         }
 
 		return $this;
