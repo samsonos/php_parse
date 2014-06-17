@@ -123,8 +123,8 @@ class Excel2
     /**
      * Set specific external column parser, if no number is passed parser will be used for all columns
      * @param mixed $parser Column parser function
-     * @param integer $number Column nubmer
-     * @return $this
+     * @param integer $number Column number
+     * @return \samson\parse\Excel2 Chaining
      */
 	public function setColumnParser( $parser, $number = null )
 	{
@@ -147,27 +147,42 @@ class Excel2
 	}
 
     /**
-     * Set specific external column validator
-     * @param integer $number Column number
-     * @param mixed $validator Column validator function
-     * @return $this
+     * Add external column validator to column validators collection
+     * @param integer   $number     Column number
+     * @param callable  $validator  External column validator callable
+     * @return \samson\parse\Excel2 Chaining
      */
-	public function setColumnValidator( $number, $validator )
+	public function setColumnValidator($number, $validator)
 	{
 		// If existing parser is passed
 		if( is_callable($validator) )
 		{
-			// Add specific column parser to column parsers array
-			if( !isset($this->column_validators[ $number ])) $this->column_validators[ $number ] = array( $validator );
-			else $this->column_validators[ $number ][] = $validator;			
-		}
-		else elapsed('Cannot set column validator: '.$validator);
+            // Pointer to column validators collection
+            $_validator = & $this->column_validators[ $number ];
+
+			// If this is first time validator is added to this column number
+			if (!isset($_validator)) {
+                // Create collection
+                $_validator = array();
+            }
+
+            // Add validator to column validators collection
+            $_validator[] = $validator;
+
+		} else { // Trigger error
+            return e('Cannot set external column # ## validator ## - it is not callable', E_SAMSON_FATAL_ERROR, array($number, $validator));
+        }
 		
 		return $this;
 	}
-			
-	/** Constructor */
-	public function __construct( $file_name, $from_row = 0, $userName = 'Parser')
+
+    /**
+     * Constructor
+     * @param string $file_name Path to file
+     * @param int    $from_row  Starting row
+     * @param string $userName  Default parser user name
+     */
+    public function __construct( $file_name, $from_row = 0, $userName = 'Parser')
 	{
 		$this->file_name = $file_name;
 		$this->from_row = $from_row;
@@ -188,20 +203,20 @@ class Excel2
 	 */
 	private function get_extension($file_name){
 	
-		// get extention of file, by php built-in function
-		$extention = pathinfo($file_name);
-		$extention = $extention['extension'];
+		// get extension of file, by php built-in function
+		$extension = pathinfo($file_name);
+        $extension = $extension['extension'];
 	
-		switch ($extention) {
-			case 'xlsx': $extention = 'Excel2007'; break;
-			case 'xls': $extention = 'Excel5'; break;
-			case 'ods': $extention = 'OOCalc'; break;
-			case 'slk': $extention = 'SYLK'; break;
-			case 'xml': $extention = 'Excel2003XML'; break;
-			case 'gnumeric': $extention = 'Gnumeric'; break;
+		switch ($extension) {
+			case 'xlsx': $extension = 'Excel2007'; break;
+			case 'xls': $extension = 'Excel5'; break;
+			case 'ods': $extension = 'OOCalc'; break;
+			case 'slk': $extension = 'SYLK'; break;
+			case 'xml': $extension = 'Excel2003XML'; break;
+			case 'gnumeric': $extension = 'Gnumeric'; break;
 			default: echo 'This parser read file with extention: xlsx, xls, ods, slk, xml, gnumeric';
 		}
-		return $extention;
+		return $extension;
 	}
 
     /**
@@ -248,7 +263,7 @@ class Excel2
 		// Iterate rows
 		for ($i = $this->from_row; $i <= $highestRow; $i++)
 		{
-			// array that conteins all entry of row
+			// array that contains all entry of row
 			$row = array();
 			
 			// Iterate columns
