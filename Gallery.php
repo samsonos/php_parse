@@ -47,7 +47,6 @@ class Gallery extends ColumnParser
      */
 	public function & parser($value)
 	{
-        elapsed('Parsing gallery '.$value);
         // Try to split value using passed token
         foreach (explode($this->token, $value) as $photo) {
             // Rewrite common mistakes, trim photo name
@@ -70,12 +69,12 @@ class Gallery extends ColumnParser
                 if(strtolower($file) == $fileNameLowerCase) {
 
                     // Normalize photo name
-                    $normalizedPhoto = str_replace(' ', '_', strtolower($photo));
+                    //$normalizedPhoto = str_replace(' ', '_', strtolower($photo));
 
                     // If scale module is configured
                     if(isset(s()->module_stack['scale'])) {
                         // Resize image
-                        m('scale')->resize($file, $normalizedPhoto, $this->uploadPath);
+                        m('scale')->resize($file, $photo, $this->uploadPath);
                     }
 
                     $gallery = new \samson\activerecord\gallery(false);
@@ -86,6 +85,9 @@ class Gallery extends ColumnParser
                     $gallery->MaterialID 	= $this->material->result->id;
                     $gallery->Active 		= 1;
                     $gallery->save();
+
+                    // Rewrite image to normal file name
+                    //file_put_contents($this->uploadPath.$normalizedPhoto, file_get_contents($file));
 
                     $found = true;
                     break;

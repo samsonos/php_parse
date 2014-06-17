@@ -228,7 +228,6 @@ class Material extends ColumnParser
 
             // Iterate material field parsers
             foreach ($this->fields as $f) {
-                elapsed('Parsing field ');
                 if (!$f->parse($data, $row_idx)) {
                     // Error handling
                 }
