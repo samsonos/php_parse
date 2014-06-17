@@ -123,7 +123,7 @@ class MaterialField extends ColumnParser
         $mf->MaterialID 	= $this->material->result->id;
         $mf->Value 			= $value;
         $mf->Active 		= 1;
-        $mf->locale 		= isset($this->locale) ? $this->locale : DEFAULT_LOCALE;
+        $mf->locale 		= isset($this->locale) ? $this->locale : '';
         $mf->save();
 
 		return $mf;
