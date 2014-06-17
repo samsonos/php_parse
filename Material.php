@@ -164,9 +164,21 @@ class Material extends ColumnParser
         return $this;
     }
 
-    public function gallery($idx)
+    /**
+     * Create gallery material parser for material parser
+     * @param integer   $idx    Column index to parse
+     * @param string    $path   Path to find images
+     * @param callable  $parser External column parser
+     * @param string    $token  Column image splitter
+     *
+     * @return \samson\parse\Material Chaining
+     */
+    public function gallery($idx, $path = 'cms/upload/', $parser = null, $token = ',')
     {
+        // Create new gallery parser
+        $this->fields[$idx] = new Gallery($idx, $this, $parser, $token, $path );
 
+        return $this;
     }
 	
 	/**
