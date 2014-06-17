@@ -121,7 +121,14 @@ class MaterialField extends ColumnParser
         $mf = new \samson\activerecord\MaterialField(false);
         $mf->FieldID 		= $this->db_field->id;
         $mf->MaterialID 	= $this->material->result->id;
-        $mf->Value 			= $value;
+
+        // If this is numeric field
+        if($this->type == 7) {
+            $mf->numeric_value = $value;
+        } else { // Other fields
+            $mf->Value 			= $value;
+        }
+
         $mf->Active 		= 1;
         $mf->locale 		= isset($this->locale) ? $this->locale : '';
         $mf->save();
