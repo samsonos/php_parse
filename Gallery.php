@@ -60,13 +60,13 @@ class Gallery extends ColumnParser
             // Prepare data for case insensitive file search
             $directoryName = dirname($path);
             $fileArray = glob($directoryName . '/*', GLOB_NOSORT);
-            $fileNameLowerCase = strtolower($path);
+            $fileNameLowerCase = mb_strtolower($path, 'UTF-8');
             $found = false;
 
             // Iterate all location files
             foreach($fileArray as $file) {
                 // If lowercase variant matches
-                if(strtolower($file) == $fileNameLowerCase) {
+                if(mb_strtolower($file, 'UTF-8') == $fileNameLowerCase) {
 
                     // Normalize photo name
                     //$normalizedPhoto = str_replace(' ', '_', strtolower($photo));
