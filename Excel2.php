@@ -12,7 +12,7 @@ use samson\activerecord\dbRelation;
 class Excel2
 {	
 	/** Default timelimit for parser execution */
-	const TIME_LIMIT = 300;
+	const TIME_LIMIT = 600;
 
     /** Generic parser user */
     public static $user;
@@ -175,8 +175,6 @@ class Excel2
 		
 		return $this;
 	}
-
-
 
     /**
      * Constructor
