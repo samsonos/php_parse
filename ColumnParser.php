@@ -33,7 +33,7 @@ abstract class ColumnParser
 			if( is_callable($parser) ) {
                 $this->parser = $parser;
             } else { // Trigger error
-                e('Parser function not callable!', E_SAMSON_FATAL_ERROR );
+                //e('Parser function not callable!', E_SAMSON_FATAL_ERROR );
             }
 		}		
 	}	

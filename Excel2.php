@@ -73,6 +73,7 @@ class Excel2
 			$cmsnav->Name = $name;
 			$cmsnav->Url = utf8_translit($name);
             $cmsnav->Active = 1;
+            $cmsnav->Created = date('Y-m-d h:i:s');
             $cmsnav->UserID = self::$user->id;
 			$cmsnav->save();
 		}

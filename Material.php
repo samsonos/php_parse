@@ -53,7 +53,7 @@ class Material extends ColumnParser
                 $this->fields[$column] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type, $value, $locale);
             }
         } else { // Not localized material
-            $this->fields[$idx] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type);
+            $this->fields[$idx] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type, $value);
         }
 
 		return $this;
@@ -72,7 +72,7 @@ class Material extends ColumnParser
      */
     public function string($idx, $field, $structure = null, $parser = null, $description = '')
     {
-        return $this->field($idx, $field, $this, $parser, $structure, $description);
+        return $this->field($idx, $field, $parser, $structure, $description);
     }
 
     /**
