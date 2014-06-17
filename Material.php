@@ -193,6 +193,8 @@ class Material extends ColumnParser
      */
 	public function & parser($name, $url = null, $published = 1, $active = 1, $user_id = null)
 	{
+        $m = null;
+
         // If we have not parsed this material earlier
         if (!isset($this->uniques[$name])) {
             // Strore unique value
@@ -206,11 +208,12 @@ class Material extends ColumnParser
             $m->UserID 		= !isset($user_id) ? Excel2::$user->id : $user_id;
             $m->save();
 
-            return $m;
             // Handle unique material
         } else { // Trigger duplicate warning
             //e('Found duplicate material by ## at ##', D_SAMSON_DEBUG, array($value, $row_idx));
         }
+
+        return $m;
 	}
 
 	/** @see \samson\parse\ColumnParser::success() */
@@ -227,7 +230,7 @@ class Material extends ColumnParser
             }
 
         } else { // Trigger error
-            return e('Cannot parse row ##, Material has not been created! ##',E_SAMSON_FATAL_ERROR, array($row_idx, $this->result));
+            //return e('Cannot parse row ##, Material has not been created! ##',E_SAMSON_FATAL_ERROR, array($row_idx, $this->result));
         }
 
 		return $this->result;
