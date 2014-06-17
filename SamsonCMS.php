@@ -136,6 +136,7 @@ class SamsonCMS
                     $s->Active = 1;
                     $s->Url = $url;
                     $s->UserID = $user->id;
+                    $s->Created = date('Y-m-d h:i:s');
 
                     // Save structure to db
                     $s->save();
@@ -218,8 +219,6 @@ class SamsonCMS
             db()->simple_query('DELETE FROM structure_relation WHERE parent_id IN ('.$struct_ids.')');
             // Clear all structure field relations
             db()->simple_query('DELETE FROM structurefield WHERE StructureID = '.$structure->id);
-
-
 
             // If we have found materials
             if(sizeof($material_ids)) {

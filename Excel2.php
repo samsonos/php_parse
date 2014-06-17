@@ -14,10 +14,13 @@ class Excel2
 	/** Default timelimit for parser execution */
 	const TIME_LIMIT = 300;
 	
-	/** Collection of external generic handler for row parsing */
+	/** @var callable[] Collection of external generic handlers for row parsing */
 	public $row_parser = array();
-	
-	/** Number fo row to start parsing from */
+
+    /** @var callable[] External generic handlers collection for parsers for all columns */
+    protected $column_parsers = array();
+
+    /** Number fo row to start parsing from */
 	public $from_row;
 	
 	/** File for parsing */
@@ -26,10 +29,7 @@ class Excel2
 	/** Columns parsers map */
 	protected $parsers_by_column = array();
 	
-	/** External generic handlers collection for column parsing */
-	protected $column_parsers = array();		
-	
-	/** External handlers for columns validation*/
+	/** @var callable[] External handlers for columns validation*/
 	protected $column_validators = array();
 	
 	/** Set parent structure to work with */
@@ -47,30 +47,30 @@ class Excel2
     /** Generic parser user */
     public $user;
 	
-	/** Array of material parser objects */
+	/** @var Material[] Array of material parser objects */
 	protected $material_parsers = array();
 	
 	/**
-	 * 
-	 * @param Material $m
-	 * @return \samson\parse\Excel2
+	 * Add external Material parser object to material parsers collection
+	 * @param Material $m Pointer to Material parser object
+	 * @return \samson\parse\Excel2 Chaining
 	 */
-	public function material( Material & $m )
+	public function material(Material & $m)
 	{
-		$this->material_parsers[] = $m;		
+		$this->material_parsers[] = $m;
+
 		return $this;
 	}
 
     /**
      * Set parent structure element to work when building catalog tree
-     * @param $name
+     * @param mixed $name Pointer to structure object or its name for searching/creating
      * @return \samson\parse\Excel2 Chaining
      */
-	public function setStructure( $name )
+	public function setStructure($name)
 	{
 		// If passed parent structure does not exists
-		if( !ifcmsnav( $name, $cmsnav, 'Name') )
-		{
+		if (!ifcmsnav($name, $cmsnav, 'Name')) {
 			// Create structure
 			$cmsnav = new \samson\cms\cmsnav(false);
 			$cmsnav->Name = $name;
@@ -79,32 +79,29 @@ class Excel2
             $cmsnav->UserID = $this->user->id;
 			$cmsnav->save();
 		}
-		
-		$this->parent_structure = $cmsnav;	
+
+        // Store pointer to parent structure
+		$this->parent_structure = & $cmsnav;
 		
 		return $this;
 	}
 
-    public function createStructureField ($field)
-    {
-        $fieldID = dbQuery('\samson\cms\cmsfield')->Name($field)->first();
-        $sf = new \samson\activerecord\structurefield(false);
-        $sf->FieldID = $fieldID->FieldID;
-        $sf->StructureID = $this->parent_structure->StructureID;
-        $sf->Active = 1;
-        $sf->save();
-        return $this;
-    }
-	
-	public function setRowParser( $parser )
+    /**
+     * Add row parser to row parsers collection
+     * @param callable $parser External row parser
+     * @return Excel2 Chaining
+     */
+    public function setRowParser( $parser )
 	{
 		// If existing parser is passed
-		if( is_callable($parser) )
-		{			
+		if (is_callable($parser)) {
 			// Add generic column parser to parsers collection
 			$this->row_parser[] = $parser;
-		}
-		else elapsed('Cannot set row parser: '.$parser);
+
+		} else { // Trigger error
+            return e('Cannot set external row parser ## - it is not callable', E_SAMSON_FATAL_ERROR, $parser);
+        }
+
 		return $this;
 	}
 	
@@ -135,14 +132,14 @@ class Excel2
 		if( is_callable($parser) )
 		{
 			// If column number is specified 
-			if( isset($number)) 
-			{
+			if (isset($number)) {
 				// Add specific column parser to column parsers array
 				if( !isset($this->parsers_by_column[ $number ]))$this->parsers_by_column[ $number ] = array( $parser ); 
 				else $this->parsers_by_column[ $number ][] = $parser;
-			}
-			// Add generic column parser to parsers collection
-			else $this->column_parsers[] = $parser;
+
+			} else { // Add generic column parser to parsers collection
+                $this->column_parsers[] = $parser;
+            }
 		}
 		else elapsed('Cannot set column parser: '.$parser);
 		
@@ -214,19 +211,19 @@ class Excel2
      *
      * @return array that contains arrays which contain one row
      */
-	public function parse($clear = true)
+	public function parse($clear = false)
 	{		
 		set_time_limit( Parse::TIME_LIMIT );
 				
-		// Clear old parent structure entities
-        if ($clear) {
-            if( isset($this->parent_structure) ) SamsonCMS::structure_clear( $this->parent_structure );
+		// Clear old parent structure entities if necessary
+        if ( $clear && isset($this->parent_structure)) {
+            SamsonCMS::structure_clear($this->parent_structure);
         }
-		//return;
-		// Convert extention of file to extension that need for parser
-		$expention = $this->get_extension( $this->file_name );
+
+		// Convert extension of file to extension that need for parser
+		$extension = $this->get_extension($this->file_name);
 		
-		$objReader = PHPExcel_IOFactory::createReader($expention);
+		$objReader = PHPExcel_IOFactory::createReader($extension);
 		$objReader->setReadDataOnly(false);
 		
 		$objPHPExcel = $objReader->load($this->file_name);
@@ -273,20 +270,21 @@ class Excel2
 
 				// Read column
 				$column_data = $cell->getValue();
-				/*if ($column_data != '') {
 
-                }*/
 				// If external column parser is specified
-				foreach ($this->column_parsers as $parser)
-				{
-					$column_data = call_user_func( $parser, $col, $column_data );
+				foreach ($this->column_parsers as $parser) {
+					$column_data = call_user_func($parser, $col, $column_data );
 				}
 
-				// If specific column external parser is set
-				if( isset($this->column_validators[ $col ]) ) foreach ($this->column_validators[ $col ] as $parser)
-				{
-					// If validator returns false - step to next row
-					if( call_user_func( $parser, $column_data, $i ) === false ) continue 3;
+				// If external column validators is set
+				if (isset($this->column_validators[ $col ])) {
+                    // Iterate all colum validators
+                    foreach ($this->column_validators[ $col ] as $parser) {
+                        // If validator returns false - step to next row
+                        if (call_user_func( $parser, $column_data, $i ) === false) {
+                            continue 3;
+                        }
+                    }
 				}
 
 				// If specific column external parser is set
@@ -322,8 +320,8 @@ class Excel2
 				$material = $mp->parse( $row, $i );
                 if($material instanceof \samson\activerecord\Material)
                 {
-                    if (is_callable($mp->new_parser)) {
-                        call_user_func($mp->new_parser, $material, $row);
+                    if (is_callable($mp->parser)) {
+                        call_user_func($mp->parser, $material, $row);
                     }
                 }
 
