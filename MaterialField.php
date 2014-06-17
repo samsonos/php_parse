@@ -31,6 +31,9 @@ class MaterialField extends ColumnParser
     /** @var string Field description */
     protected $description;
 
+    /** @var string MaterialField locale */
+    protected $locale;
+
     /**
      * Constructor
      *
@@ -42,8 +45,9 @@ class MaterialField extends ColumnParser
      * @param string   $description Field description
      * @param int      $type        Field type
      * @param string   $value       Field default value
+     * @param string   $locale      MaterialField locale, if null materialfield is not localized
      */
-	public function __construct( $idx, $name, Material & $material, $parser = null, $structure = null, $description = '', $type = 0, $value = null)
+	public function __construct( $idx, $name, Material & $material, $parser = null, $structure = null, $description = '', $type = 0, $value = null, $locale = null)
 	{
 		// Save connection to material
 		$this->material = $material;
@@ -54,6 +58,7 @@ class MaterialField extends ColumnParser
         $this->parentStructure = $structure;
         $this->type = $type;
         $this->defaultValue = $value;
+        $this->locale = $locale;
 		
 		// Call parent 
 		parent::__construct($idx, $parser);
@@ -76,6 +81,12 @@ class MaterialField extends ColumnParser
             $this->db_field->Description = $this->description;
             $this->db_field->Value = $this->defaultValue;
             $this->db_field->Type = $this->type;
+
+            // Set field localization if necessary
+            if (isset($this->locale)) {
+                $this->db_field->local = 1;
+            }
+
             $this->db_field->save();
         }
 
@@ -112,6 +123,7 @@ class MaterialField extends ColumnParser
         $mf->MaterialID 	= $this->material->result->id;
         $mf->Value 			= $value;
         $mf->Active 		= 1;
+        $mf->locale 		= isset($this->locale) ? $this->locale : DEFAULT_LOCALE;
         $mf->save();
 
 		return $mf;

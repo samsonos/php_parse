@@ -43,10 +43,18 @@ class Material extends ColumnParser
      * @return \samson\parse\Material Chaining
      */
 	public function field( $idx, $field, $parser = null, $structure = null, $description = '', $type = 0 )
-	{		
-		// Create materialfield table object parser 
-		$this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type);
-				
+	{
+        // If array is passed, not index
+        if (is_array($idx)) {
+            // Iterate localized columns
+            foreach ($idx as $locale => $column) {
+                // Create materialfield table object parser
+                $this->fields[$column] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type, null, $locale);
+            }
+        } else { // Not localized material
+            $this->fields[$idx] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type);
+        }
+
 		return $this;
 	}
 
