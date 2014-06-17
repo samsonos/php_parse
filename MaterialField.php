@@ -16,9 +16,6 @@ class MaterialField extends ColumnParser
 	/** Pointer to field table object */
 	protected $db_field;
 
-    /** @var bool Flag if this field is an image */
-    protected $isimg;
-
     /** @var \samson\activerecord\structure Pointer to parent structure */
     protected $parentStructure;
 
@@ -48,9 +45,6 @@ class MaterialField extends ColumnParser
      */
 	public function __construct( $idx, $name, Material & $material, $parser = null, $structure = null, $description = '', $type = 0, $value = null)
 	{
-        // WTF?
-        $this->isimg = false;
-
 		// Save connection to material
 		$this->material = $material;
 
@@ -62,8 +56,7 @@ class MaterialField extends ColumnParser
         $this->defaultValue = $value;
 		
 		// Call parent 
-		parent::__construct( $idx, $parser );
-        $this->type = $type;
+		parent::__construct($idx, $parser);
     }
 
     /** Override generic column parser initialization */
@@ -102,12 +95,6 @@ class MaterialField extends ColumnParser
 
         parent::init();
     }
-	
-	/**
-	 * Override standard uniqueness test as materialfield objects can duplicate
-	 * @see \samson\parse\ColumnParser::isUnique()
-	 */
-	public function isUnique($value){ return true; }
 
     /**
      * Create materialfield record
@@ -118,14 +105,15 @@ class MaterialField extends ColumnParser
      * @internal param string $material_id Material identifier in material table
      * @return \samson\activerecord\materialfield MaterialField table object
      */
-	public function parser($value)
+	public function & parser($value)
 	{
         $mf = new \samson\activerecord\MaterialField(false);
         $mf->FieldID 		= $this->db_field->id;
-        $mf->MaterialID 	= $this->material->object->id;
+        $mf->MaterialID 	= $this->material->result->id;
         $mf->Value 			= $value;
         $mf->Active 		= 1;
         $mf->save();
+
 		return $mf;
 	}
 }

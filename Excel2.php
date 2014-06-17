@@ -262,7 +262,7 @@ class Excel2
         $mergedCellsRange = $objWorksheet->getMergeCells();
 		
 		// Iterate rows
-		for ($i = $this->from_row; $i <= $highestRow; $i++)
+		for ($i = $this->from_row; $i < $highestRow; $i++)
 		{
 			// array that contains all entry of row
 			$row = array();

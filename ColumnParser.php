@@ -8,19 +8,13 @@ use samson\cms\CMSMaterial;
  */
 abstract class ColumnParser
 {
-	/** @var string[] Unique objects collection */
-	protected $uniques = array();
-	
 	/** @var integer Main column index  */
-	protected $idx;	
-	
-	/** @var Last parsed object */
-	public $object;
+	protected $idx;
 
     /** @var mixed Column parsing result */
     public $result;
 	
-	/** @var callable[] External parser */
+	/** @var callable External parser */
 	public $parser;
 
     /**
@@ -45,35 +39,17 @@ abstract class ColumnParser
 	}	
 	
 	/**
-	 * External column parser callable
+	 * Internal column parser callable
      * Must store $this->result field
 	 * @param mixed $value Incoming column value
 	 * @return mixed Parsing result
 	 */
-	protected abstract function parser($value);
+	protected abstract function & parser($value);
 
     /**
      * Initialize column parser
      */
     public function init(){}
-	
-	/**
-	 * Generic object creation unique test
-	 * @param mixed $value Main object column value
-	 * @return boolean True if value is unique
-	 */
-	public function isUnique($value)
-	{
-		// If value is unique 
-		if( !isset( $this->uniques[ $value ]) ) 
-		{
-			$this->uniques[ $value ] = true;
-			
-			return true;
-		}
-		// Return true
-		else false;
-	}
 
     /**
      * Perform column parsing from data
@@ -95,17 +71,17 @@ abstract class ColumnParser
             // If value is not empty
             if ($value != '') {
 
+                // Store input
+                $this->result = $value;
+
                 // If external parser is set
                 if (isset($this->parser)) {
                     // Call it and save parsed value
-                    $value = call_user_func($this->parser, $value);
+                    $this->result = call_user_func($this->parser, $value);
                 }
 
-                // Store parser result
-                $this->result = $value;
-
                 // Return success handler function
-                return $this->success($data, $row_idx);
+                return $this->success($data, $row_idx, $value);
 
             } else { // Empty column error
                 return e('Row # ##, Cannot parse column ##, Column value is empty', D_SAMSON_ACTIVERECORD_DEBUG, array($row_idx, $this->idx));
@@ -114,15 +90,18 @@ abstract class ColumnParser
         } else {
 			return e('Cannot parse row ##, Main column ## does not exists', E_SAMSON_FATAL_ERROR, array($row_idx,$this->idx));
 		}
-	}	
-	
-	/**
-	 * Handler for success column parsing
-	 * @param array 	$data 		Array of column values
-	 * @param integer	$row_idx	Current row index
-	 * @return boolean
-	 */
-	public function success(array $data, $row_idx ){
+	}
+
+    /**
+     * Handler for success column parsing
+     *
+     * @param array   $data     Array of column values
+     * @param integer $row_idx  Current row index
+     * @param string  $value    Column value
+     *
+     * @return mixed Parsed result
+     */
+	public function success(array $data, $row_idx, $value ){
         return $this->result;
     }
 }
