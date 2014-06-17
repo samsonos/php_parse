@@ -87,7 +87,7 @@ class Material extends ColumnParser
      */
     public function wysiwyg($idx, $field, $structure = null, $parser = null)
     {
-        return $this->field($idx, $field, $this, $parser, $structure, '', 8);
+        return $this->field($idx, $field, $parser, $structure, '', 8);
     }
 
     /**
@@ -103,7 +103,7 @@ class Material extends ColumnParser
      */
     public function file($idx, $field, $structure = null, $parser = null, $description = '')
     {
-        return $this->field($idx, $field, $this, $parser, $structure, $description, 1);
+        return $this->field($idx, $field, $parser, $structure, $description, 1);
     }
 
     /**
@@ -119,7 +119,7 @@ class Material extends ColumnParser
      */
     public function numeric($idx, $field, $structure = null, $parser = null,  $description = '')
     {
-        return $this->field($idx, $field, $this, $parser, $structure, $description, 7);
+        return $this->field($idx, $field, $parser, $structure, $description, 7);
     }
 
     /**
@@ -135,7 +135,7 @@ class Material extends ColumnParser
      */
     public function date($idx, $field, $structure = null, $parser = null,  $description = '')
     {
-        return $this->field($idx, $field, $this, $parser, $structure, $description, 3);
+        return $this->field($idx, $field, $parser, $structure, $description, 3);
     }
 
     /**
@@ -152,7 +152,7 @@ class Material extends ColumnParser
      */
     public function select($idx, $field, $value, $structure = null, $parser = null, $description = '')
     {
-        return $this->field($idx, $field, $this, $parser, $structure, $description, 4, $value);
+        return $this->field($idx, $field, $parser, $structure, $description, 4, $value);
     }
 
     /**
