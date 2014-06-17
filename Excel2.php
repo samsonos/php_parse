@@ -13,6 +13,9 @@ class Excel2
 {	
 	/** Default timelimit for parser execution */
 	const TIME_LIMIT = 300;
+
+    /** Generic parser user */
+    public static $user;
 	
 	/** @var callable[] Collection of external generic handlers for row parsing */
 	public $rowParsers = array();
@@ -43,9 +46,6 @@ class Excel2
 	
 	/** Array for material unuiqueness */
 	public $uniques = array();
-
-    /** Generic parser user */
-    public $user;
 	
 	/**
 	 * Add external Material parser object to material parsers collection
@@ -73,7 +73,7 @@ class Excel2
 			$cmsnav->Name = $name;
 			$cmsnav->Url = utf8_translit($name);
             $cmsnav->Active = 1;
-            $cmsnav->UserID = $this->user->id;
+            $cmsnav->UserID = self::$user->id;
 			$cmsnav->save();
 		}
 
@@ -189,11 +189,11 @@ class Excel2
 		$this->from_row = $from_row;
 
         // Try to find user for storing data into tables
-        if(!dbQuery('user')->FName($userName, dbRelation::LIKE)->first($this->user)) {
+        if(!dbQuery('user')->FName($userName, dbRelation::LIKE)->first(self::$user)) {
             // Create new user object
-            $this->user = new \samson\activerecord\User(false);
-            $this->user->FName = $userName;
-            $this->user->save();
+            self::$user = new \samson\activerecord\User(false);
+            self::$user->FName = $userName;
+            self::$user->save();
         }
 	}	
 	
@@ -292,7 +292,7 @@ class Excel2
                     // Iterate all this columns defined parsers
                     foreach ($this->columnParsers[$col] as $parser) {
                         // Parse column and store result
-                        $column_data = call_user_func( $parser, $column_data );
+                        $column_data = call_user_func( $parser, $column_data, $i);
                     }
                 }
 
@@ -328,11 +328,17 @@ class Excel2
             $mp->init();
 
             // Iterate all gathered valid rows
-			foreach ($all_rows as $row ) 
+            $size = sizeof($all_rows);
+			for ($i = 0; $i < $size; $i++)
 			{
-				$material = $mp->parse( $row, $i );
-                if($material instanceof \samson\activerecord\Material)
-                {
+                // Get current row columns array
+                $row = & $all_rows[$i];
+
+                // Try to parse row to get material instance
+				$material = $mp->parse($row, $i);
+
+                // If we have successfully parsed row
+                if ($material instanceof \samson\activerecord\Material) {
                     if (is_callable($mp->parser)) {
                         call_user_func($mp->parser, $material, $row);
                     }

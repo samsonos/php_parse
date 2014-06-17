@@ -8,17 +8,20 @@ use samson\cms\CMSMaterial;
  */
 abstract class ColumnParser
 {
-	/** Unique objects collection */
+	/** @var string[] Unique objects collection */
 	protected $uniques = array();
 	
-	/** Main column index  */
+	/** @var integer Main column index  */
 	protected $idx;	
 	
-	/** Last parsed object */
+	/** @var Last parsed object */
 	public $object;
+
+    /** @var mixed Column parsing result */
+    public $result;
 	
-	/** External parser */
-	protected $parser;
+	/** @var callable[] External parser */
+	public $parser;
 
     /**
      * Constuctor
@@ -35,25 +38,24 @@ abstract class ColumnParser
 		if (isset($parser)) {
 			if( is_callable($parser) ) {
                 $this->parser = $parser;
+            } else { // Trigger error
+                e('Parser function not callable!', E_SAMSON_FATAL_ERROR );
             }
-			else e('Parser function not callable!', E_SAMSON_FATAL_ERROR );
 		}		
 	}	
 	
 	/**
-	 * Parse column and create dbRecord object
-	 * @param mixed $value Column value
-	 * @return \samson\activerecord\dbRecord New object
+	 * External column parser callable
+     * Must store $this->result field
+	 * @param mixed $value Incoming column value
+	 * @return mixed Parsing result
 	 */
-	protected abstract function parser( $value );
+	protected abstract function parser($value);
 
     /**
      * Initialize column parser
      */
-    public function init()
-    {
-
-    }
+    public function init(){}
 	
 	/**
 	 * Generic object creation unique test
@@ -73,12 +75,12 @@ abstract class ColumnParser
 		else false;
 	}
 
-	/**
-	 * Perform column parsing from data
-	 * @param array 	$data 		Array of column values
-	 * @param integer	$row_idx	Current row index
-	 * @return \samson\activerecord\material Created and saved object
-	 */
+    /**
+     * Perform column parsing from data
+     * @param array 	$data 		Array of column values
+     * @param integer	$row_idx	Current row index
+     * @return \samson\activerecord\material Created and saved object
+     */
 	public function parse(array $data, $row_idx)
 	{
         // Get column value
@@ -91,7 +93,7 @@ abstract class ColumnParser
             $value = trim($value);
 
             // If value is not empty
-            if( $value != '') {
+            if ($value != '') {
 
                 // If external parser is set
                 if (isset($this->parser)) {
@@ -99,56 +101,11 @@ abstract class ColumnParser
                     $value = call_user_func($this->parser, $value);
                 }
 
-                // If we have not parsed this value earlier
-                if ($this->isUnique($value)) {
+                // Store parser result
+                $this->result = $value;
 
-                    $this->object = $this->parser($value);
-
-                    if( $this->object instanceof \samson\activerecord\dbRecord ) {
-
-                        return $this->success( $data, $row_idx );
-
-                    } else {
-                        return e('Cannot parse row ##, Object has not been created!',E_SAMSON_FATAL_ERROR, $row_idx );
-                    }
-                }
-
-               /* // If this values passes unique test
-                if ($this->hasParent) {
-                    if ($this->isUnique($value) && $value != '') {
-                        $this->object = $this->parser( $value );
-                        if( $this->object instanceof \samson\activerecord\dbRecord )
-                        {
-                            return $this->success( $data, $row_idx );
-                        }
-                        else return e('Cannot parse row ##, Object has not been created!',E_SAMSON_FATAL_ERROR, $row_idx );
-                    }
-                } else if( $value != '') {
-                    $material = null;
-                    if (dbQuery('\samson\cms\cmsmaterial')->Name($value)->first($material)) {
-                        $this->object = $this->parser( $value );
-                        $rm = new \samson\activerecord\related_materials(false);
-                        $rm->first_material = $material->MaterialID;
-                        $rm->second_material = $this->object->id;
-                        $rm->save();
-
-                        if (dbQuery('\samson\cms\cmsmaterial')->MaterialID($this->object->id)->first($child)) {
-                            $child->Url = $child->Url.'-'.generate_password(4);
-                            $child->save();
-                        }
-                    } else {
-                        // Main parsing - create object
-                        $this->object = $this->parser( $value );
-                    }
-                }*/
-
-                // If table object successfully created
-                if ($this->object instanceof \samson\activerecord\dbRecord ) {
-                    // Call success handler
-                    return $this->success($data, $row_idx);
-                } else {
-                    return e('Cannot parse row ##, Object has not been created!', E_SAMSON_FATAL_ERROR, $row_idx );
-                }
+                // Return success handler function
+                return $this->success($data, $row_idx);
 
             } else { // Empty column error
                 return e('Row # ##, Cannot parse column ##, Column value is empty', D_SAMSON_ACTIVERECORD_DEBUG, array($row_idx, $this->idx));
@@ -166,6 +123,6 @@ abstract class ColumnParser
 	 * @return boolean
 	 */
 	public function success(array $data, $row_idx ){
-        return $this->object;
+        return $this->result;
     }
 }

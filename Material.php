@@ -184,31 +184,78 @@ class Material extends ColumnParser
      * @see \samson\parse\ColumnParser::parser()
      * @return \samson\activerecord\material Material table object
      */
-	public function parser( $name, $url = null, $published = 1, $active = 1, $user_id = 1 )
+	public function parser($name, $url = null, $published = 1, $active = 1, $user_id = null)
 	{
         $m 				= new \samson\activerecord\material(false);
         $m->Name 		= $name;
-        $m->Url 		= $this->url_prefix.utf8_translit( $name );
+        $m->Url 		= $this->url_prefix.utf8_translit($name);
         $m->Published 	= $published;
         $m->Active 		= $active;
-        $m->UserID 		= $user_id;
+        $m->UserID 		= !isset($user_id) ? Excel2::$user->id : $user_id;
         $m->save();
 
 		return $m;			
 	}
 
 	/** @see \samson\parse\ColumnParser::success() */
-	public function success( array $data, $row_idx )
+	public function success(array $data, $row_idx)
 	{
-		// Iterate material fields
-		foreach ( $this->fields as $f ) 
-		{
-			if( !$f->parse( $data, $row_idx ) )
-			{
+		// Iterate material field parsers
+		foreach ( $this->fields as $f ) {
+			if (!$f->parse($data, $row_idx)) {
 				// Error handling
 			}
 		}		
 		
-		return $this->object;
-	}	
+		return $this->result;
+	}
+
+    /**
+     * Perform column parsing from data
+     * @param array 	$data 		Array of column values
+     * @param integer	$row_idx	Current row index
+     * @return \samson\activerecord\material Created and saved object
+     */
+    public function parse(array $data, $row_idx)
+    {
+        // Get column value
+        $value = & $data[ $this->idx ];
+
+        // If main columns exists
+        if (isset($value)) {
+
+            // Remove unnecessary spaces
+            $value = trim($value);
+
+            // If value is not empty
+            if ($value != '') {
+
+                // If external parser is set
+                if (isset($this->parser)) {
+                    // Call it and save parsed value
+                    $value = call_user_func($this->parser, $value, );
+                }
+
+                // If we have not parsed this value earlier
+                if ($this->isUnique($value)) {
+
+                    $this->object = $this->parser($value);
+
+                    if( $this->object instanceof \samson\activerecord\dbRecord ) {
+
+                        return $this->success( $data, $row_idx );
+
+                    } else {
+                        return e('Cannot parse row ##, Object has not been created!',E_SAMSON_FATAL_ERROR, $row_idx );
+                    }
+                }
+
+            } else { // Empty column error
+                return e('Row # ##, Cannot parse column ##, Column value is empty', D_SAMSON_ACTIVERECORD_DEBUG, array($row_idx, $this->idx));
+            }
+
+        } else {
+            return e('Cannot parse row ##, Main column ## does not exists', E_SAMSON_FATAL_ERROR, array($row_idx,$this->idx));
+        }
+    }
 }
