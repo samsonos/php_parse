@@ -39,17 +39,18 @@ class Material extends ColumnParser
      * @param mixed    $structure   Structure object or Name or identifier
      * @param string   $description Field description
      * @param int      $type        Field type
+     * @param string   $value       Default value
      *
      * @return \samson\parse\Material Chaining
      */
-	public function field( $idx, $field, $parser = null, $structure = null, $description = '', $type = 0 )
+	public function field( $idx, $field, $parser = null, $structure = null, $description = '', $type = 0, $value = null )
 	{
         // If array is passed, not index
         if (is_array($idx)) {
             // Iterate localized columns
             foreach ($idx as $locale => $column) {
                 // Create materialfield table object parser
-                $this->fields[$column] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type, null, $locale);
+                $this->fields[$column] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type, $value, $locale);
             }
         } else { // Not localized material
             $this->fields[$idx] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, $type);
@@ -71,10 +72,7 @@ class Material extends ColumnParser
      */
     public function string($idx, $field, $structure = null, $parser = null, $description = '')
     {
-        // Create materialfield table object parser
-        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 0);
-
-        return $this;
+        return $this->field($idx, $field, $this, $parser, $structure, $description);
     }
 
     /**
@@ -89,10 +87,7 @@ class Material extends ColumnParser
      */
     public function wysiwyg($idx, $field, $structure = null, $parser = null)
     {
-        // Create materialfield table object parser
-        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, '', 8);
-
-        return $this;
+        return $this->field($idx, $field, $this, $parser, $structure, '', 8);
     }
 
     /**
@@ -108,10 +103,7 @@ class Material extends ColumnParser
      */
     public function file($idx, $field, $structure = null, $parser = null, $description = '')
     {
-        // Create materialfield table object parser
-        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 1);
-
-        return $this;
+        return $this->field($idx, $field, $this, $parser, $structure, $description, 1);
     }
 
     /**
@@ -127,10 +119,7 @@ class Material extends ColumnParser
      */
     public function numeric($idx, $field, $structure = null, $parser = null,  $description = '')
     {
-        // Create materialfield table object parser
-        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 7);
-
-        return $this;
+        return $this->field($idx, $field, $this, $parser, $structure, $description, 7);
     }
 
     /**
@@ -146,10 +135,7 @@ class Material extends ColumnParser
      */
     public function date($idx, $field, $structure = null, $parser = null,  $description = '')
     {
-        // Create materialfield table object parser
-        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 3);
-
-        return $this;
+        return $this->field($idx, $field, $this, $parser, $structure, $description, 3);
     }
 
     /**
@@ -166,10 +152,7 @@ class Material extends ColumnParser
      */
     public function select($idx, $field, $value, $structure = null, $parser = null, $description = '')
     {
-        // Create materialfield table object parser
-        $this->fields[ $idx ] = new MaterialField( $idx, $field, $this, $parser, $structure, $description, 4, $value );
-
-        return $this;
+        return $this->field($idx, $field, $this, $parser, $structure, $description, 4, $value);
     }
 
     /**
