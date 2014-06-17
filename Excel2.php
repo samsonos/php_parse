@@ -368,7 +368,7 @@ class Excel2
 			}
 		}
 		// Build structure
-		SamsonCMS::structure_create( $this->catalog, array( $this->parent_structure ), $this->user );
+		SamsonCMS::structure_create( $this->catalog, array( $this->parent_structure ), self::$user );
 
 		return $all_rows;
 	}	
