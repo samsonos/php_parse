@@ -15,22 +15,22 @@ class Excel2
 	const TIME_LIMIT = 300;
 	
 	/** @var callable[] Collection of external generic handlers for row parsing */
-	public $row_parser = array();
+	public $rowParsers = array();
 
     /** @var callable[] External generic handlers collection for parsers for all columns */
-    protected $column_parsers = array();
+    protected $columnParsers = array();
+
+    /** @var callable[] External handlers for columns validation*/
+    protected $columnValidators = array();
+
+    /** @var Material[] Array of material parser objects */
+    protected $materialParsers = array();
 
     /** Number fo row to start parsing from */
 	public $from_row;
 	
 	/** File for parsing */
 	public $file_name;
-	
-	/** Columns parsers map */
-	protected $parsers_by_column = array();
-	
-	/** @var callable[] External handlers for columns validation*/
-	protected $column_validators = array();
 	
 	/** Set parent structure to work with */
 	protected $parent_structure;
@@ -47,9 +47,6 @@ class Excel2
     /** Generic parser user */
     public $user;
 	
-	/** @var Material[] Array of material parser objects */
-	protected $material_parsers = array();
-	
 	/**
 	 * Add external Material parser object to material parsers collection
 	 * @param Material $m Pointer to Material parser object
@@ -57,7 +54,7 @@ class Excel2
 	 */
 	public function material(Material & $m)
 	{
-		$this->material_parsers[] = $m;
+		$this->materialParsers[] = $m;
 
 		return $this;
 	}
@@ -96,7 +93,7 @@ class Excel2
 		// If existing parser is passed
 		if (is_callable($parser)) {
 			// Add generic column parser to parsers collection
-			$this->row_parser[] = $parser;
+			$this->rowParsers[] = $parser;
 
 		} else { // Trigger error
             return e('Cannot set external row parser ## - it is not callable', E_SAMSON_FATAL_ERROR, $parser);
@@ -104,6 +101,64 @@ class Excel2
 
 		return $this;
 	}
+
+    /**
+     * Set specific external column parser, if no number is passed parser will be used for all columns
+     * @param integer $number Column number
+     * @param mixed $parser Column parser function
+     * @return \samson\parse\Excel2 Chaining
+     */
+    public function setColumnParser($number, $parser)
+    {
+        // If existing parser is passed
+        if(is_callable($parser)) {
+            // Pointer to column validators collection
+            $_parser = & $this->columnParsers[ $number ];
+
+            // If this is first time validator is added to this column number
+            if (!isset($_parser)) {
+                // Create collection
+                $_parser = array();
+            }
+
+            // Add validator to column validators collection
+            $_parser[] = $parser;
+
+        } else { // Trigger error
+            return e('Cannot set external column # ## parser ## - it is not callable', E_SAMSON_FATAL_ERROR, array($number, $parser));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add external column validator to column validators collection
+     * @param integer   $number     Column number
+     * @param callable  $validator  External column validator callable
+     * @return \samson\parse\Excel2 Chaining
+     */
+    public function setColumnValidator($number, $validator)
+    {
+        // If existing parser is passed
+        if(is_callable($validator)) {
+            // Pointer to column validators collection
+            $_validator = & $this->columnValidators[ $number ];
+
+            // If this is first time validator is added to this column number
+            if (!isset($_validator)) {
+                // Create collection
+                $_validator = array();
+            }
+
+            // Add validator to column validators collection
+            $_validator[] = $validator;
+
+        } else { // Trigger error
+            return e('Cannot set external column # ## validator ## - it is not callable', E_SAMSON_FATAL_ERROR, array($number, $validator));
+        }
+
+        return $this;
+    }
 	
 	/**
 	 * Set array of structure tree logic specifying columns numbers
@@ -120,61 +175,7 @@ class Excel2
 		return $this;
 	}
 
-    /**
-     * Set specific external column parser, if no number is passed parser will be used for all columns
-     * @param mixed $parser Column parser function
-     * @param integer $number Column number
-     * @return \samson\parse\Excel2 Chaining
-     */
-	public function setColumnParser( $parser, $number = null )
-	{
-		// If existing parser is passed
-		if( is_callable($parser) )
-		{
-			// If column number is specified 
-			if (isset($number)) {
-				// Add specific column parser to column parsers array
-				if( !isset($this->parsers_by_column[ $number ]))$this->parsers_by_column[ $number ] = array( $parser ); 
-				else $this->parsers_by_column[ $number ][] = $parser;
 
-			} else { // Add generic column parser to parsers collection
-                $this->column_parsers[] = $parser;
-            }
-		}
-		else elapsed('Cannot set column parser: '.$parser);
-		
-		return $this;
-	}
-
-    /**
-     * Add external column validator to column validators collection
-     * @param integer   $number     Column number
-     * @param callable  $validator  External column validator callable
-     * @return \samson\parse\Excel2 Chaining
-     */
-	public function setColumnValidator($number, $validator)
-	{
-		// If existing parser is passed
-		if( is_callable($validator) )
-		{
-            // Pointer to column validators collection
-            $_validator = & $this->column_validators[ $number ];
-
-			// If this is first time validator is added to this column number
-			if (!isset($_validator)) {
-                // Create collection
-                $_validator = array();
-            }
-
-            // Add validator to column validators collection
-            $_validator[] = $validator;
-
-		} else { // Trigger error
-            return e('Cannot set external column # ## validator ## - it is not callable', E_SAMSON_FATAL_ERROR, array($number, $validator));
-        }
-		
-		return $this;
-	}
 
     /**
      * Constructor
@@ -286,45 +287,42 @@ class Excel2
 				// Read column
 				$column_data = $cell->getValue();
 
-				// If external column parser is specified
-				foreach ($this->column_parsers as $parser) {
-					$column_data = call_user_func($parser, $col, $column_data );
-				}
+                // If column external parsers is set
+                if (isset($this->columnParsers[$col])) {
+                    // Iterate all this columns defined parsers
+                    foreach ($this->columnParsers[$col] as $parser) {
+                        // Parse column and store result
+                        $column_data = call_user_func( $parser, $column_data );
+                    }
+                }
 
 				// If external column validators is set
-				if (isset($this->column_validators[ $col ])) {
-                    // Iterate all colum validators
-                    foreach ($this->column_validators[ $col ] as $parser) {
+				if (isset($this->columnValidators[$col])) {
+                    // Iterate all column validators
+                    foreach ($this->columnValidators[$col] as $parser) {
                         // If validator returns false - step to next row
-                        if (call_user_func( $parser, $column_data, $i ) === false) {
+                        if (call_user_func($parser, $column_data, $i) === false) {
                             continue 3;
                         }
                     }
 				}
 
-				// If specific column external parser is set
-				if( isset($this->parsers_by_column[ $col ]) ) foreach ($this->parsers_by_column[ $col ] as $parser)
-				{
-					$column_data = call_user_func( $parser, $column_data );
-				}
-
-				// Add column data to collection
-                if ($column_data != null && $column_data != '') {
-                    $row[$col] = $column_data;
-                } else {
-                    $row[$col] = '';
-                }
-				//$row[ $col ] = $column_data == null ? '' : $column_data;
+				// Add column data to row columns collection
+				$row[$col] = $column_data == null ? '' : $column_data;
 			}
 			
-			// If external column parser is specified
-			foreach ($this->row_parser as $parser ) if( is_callable( $parser )) call_user_func($parser, $row, $i );			
-			
+			// If external row parser is specified
+			foreach ($this->rowParsers as $parser) {
+                // Call and save parser row result
+                $row = call_user_func($parser, $row, $i);
+            }
+
+            // Add row to final rows collection
 			$all_rows[] = $row;
 		}	
 
 		// Perform material parsing
-		foreach ($this->material_parsers as $mp )
+		foreach ($this->materialParsers as $mp )
 		{
             // Initialize column parser
             $mp->init();
