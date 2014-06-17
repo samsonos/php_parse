@@ -80,6 +80,9 @@ abstract class ColumnParser
                     $this->result = call_user_func($this->parser, $value);
                 }
 
+                // Call generic parser
+                $this->result = $this->parser($this->result);
+
                 // Return success handler function
                 return $this->success($data, $row_idx, $value);
 

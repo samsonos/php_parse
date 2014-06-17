@@ -216,9 +216,6 @@ class Material extends ColumnParser
 	/** @see \samson\parse\ColumnParser::success() */
 	public function success(array $data, $row_idx, $value)
 	{
-        // Call default material parser
-        $this->result = $this->parser($this->result);
-
         // Check if we have received material object
         if ($this->result instanceof \samson\activerecord\dbRecord ) {
 
@@ -231,6 +228,7 @@ class Material extends ColumnParser
 
             // Iterate material field parsers
             foreach ($this->fields as $f) {
+                elapsed('Parsing field ');
                 if (!$f->parse($data, $row_idx)) {
                     // Error handling
                 }

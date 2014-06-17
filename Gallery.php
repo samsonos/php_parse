@@ -47,6 +47,7 @@ class Gallery extends ColumnParser
      */
 	public function & parser($value)
 	{
+        elapsed('Parsing gallery '.$value);
         // Try to split value using passed token
         foreach (explode($this->token, $value) as $photo) {
             // Rewrite common mistakes, trim photo name
