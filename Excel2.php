@@ -338,8 +338,8 @@ class Excel2
 
                 // If we have successfully parsed row
                 if ($material instanceof \samson\activerecord\Material) {
-                    if (is_callable($mp->parser)) {
-                        call_user_func($mp->parser, $material, $row);
+                    if (is_callable($mp->successHandler)) {
+                        call_user_func($mp->successHandler, $material, $row);
                     }
                 }
 

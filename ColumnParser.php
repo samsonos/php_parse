@@ -17,13 +17,16 @@ abstract class ColumnParser
 	/** @var callable External parser */
 	public $parser;
 
+    /** @var  callable External success handler */
+    public $successHandler;
+
     /**
      * Constuctor
      *
      * @param          $idx
      * @param callable $parser External parser function
      */
-	public function __construct( $idx, $parser = null)
+	public function __construct( $idx, $parser = null, $successHandler = null)
 	{		
 		// Set main column index
 		$this->idx = $idx;
@@ -35,8 +38,17 @@ abstract class ColumnParser
             } else { // Trigger error
                 //e('Parser function not callable!', E_SAMSON_FATAL_ERROR );
             }
-		}		
-	}	
+		}
+
+        // Check parser routine
+        if (isset($successHandler)) {
+            if( is_callable($successHandler) ) {
+                $this->successHandler = $successHandler;
+            } else { // Trigger error
+                //e('Success function not callable!', E_SAMSON_FATAL_ERROR );
+            }
+        }
+    }
 	
 	/**
 	 * Internal column parser callable

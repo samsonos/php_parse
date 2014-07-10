@@ -10,6 +10,9 @@ class Material extends ColumnParser
 	/** Special url prefix */		
 	protected $url_prefix = '';
 
+    /** @var null External parser */
+    protected $materialHandler = null;
+
 	/** @var MaterialField[] Collection of materialfield table object parsers */
 	protected $fields = array();
 
@@ -28,6 +31,18 @@ class Material extends ColumnParser
             // Initialize parser
             $f->init();
         }
+    }
+
+    /**
+     * @param string $handler External parser for material
+     *
+     * @return $this
+     */
+    public function setMaterialHandler($handler = '') {
+        if (is_callable($handler)) {
+            $this->materialHandler = $handler;
+        }
+        return $this;
     }
 
     /**
@@ -211,6 +226,10 @@ class Material extends ColumnParser
             // Handle unique material
         } else { // Trigger duplicate warning
             //e('Found duplicate material by ## at ##', D_SAMSON_DEBUG, array($value, $row_idx));
+        }
+
+        if (isset($this->materialHandler)) {
+            call_user_func($this->materialHandler, $m);
         }
 
         return $m;
