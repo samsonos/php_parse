@@ -333,37 +333,40 @@ class Excel2
                 // Get current row columns array
                 $row = & $all_rows[$i];
 
-                // Try to parse row to get material instance
-				$material = $mp->parse($row, $i);
+                //if (!dbQuery('material')->MaterialID($row[0])->first())
+                {
+                    // Try to parse row to get material instance
+                    $material = $mp->parse($row, $i);
 
-                // If we have successfully parsed row
-                if ($material instanceof \samson\activerecord\Material) {
-                    if (is_callable($mp->successHandler)) {
-                        call_user_func($mp->successHandler, $material, $row);
+                    // If we have successfully parsed row
+                    if ($material instanceof \samson\activerecord\Material) {
+                        if (is_callable($mp->successHandler)) {
+                            call_user_func($mp->successHandler, $material, $row);
+                        }
+                    }
+
+                    // Iterate defined structure trees
+                    if(isset($material)) foreach ( $mp->structures as $tree )
+                    {
+                        // Create correct multidimensional array structure using eval
+                        $catalog_eval = '$this->catalog';
+                        foreach ( $tree as $column )
+                        {
+                            // If desired column exists - use it's value
+                            if( isset($row[ $column ]) ) {
+                                $column = addslashes($row[ $column ]);
+                            }
+                            if (!empty($column)) {
+                                $catalog_eval.= '["'.$column.'"]';
+                            }
+                            //trace($column);
+                        }
+                        $catalog_eval .= '[] = $material;';
+                        //trace($catalog_eval);
+
+                        eval($catalog_eval);
                     }
                 }
-
-				// Iterate defined structure trees
-				if(isset($material)) foreach ( $mp->structures as $tree )
-				{
-					// Create correct multidimensional array structure using eval
-					$catalog_eval = '$this->catalog';
-					foreach ( $tree as $column )
-					{
-						// If desired column exists - use it's value
-						if( isset($row[ $column ]) ) {
-                            $column = addslashes($row[ $column ]);
-                        }
-                        if (!empty($column)) {
-                            $catalog_eval.= '["'.$column.'"]';
-                        }
-                        //trace($column);
-					}
-					$catalog_eval .= '[] = $material;';
-                    //trace($catalog_eval);
-
-                    eval($catalog_eval);
-				}
 			}
 		}
 		// Build structure

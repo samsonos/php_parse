@@ -10,8 +10,6 @@ class Material extends ColumnParser
 	/** Special url prefix */		
 	protected $url_prefix = '';
 
-    /** @var null External parser */
-    protected $materialHandler = null;
 
 	/** @var MaterialField[] Collection of materialfield table object parsers */
 	protected $fields = array();
@@ -31,18 +29,6 @@ class Material extends ColumnParser
             // Initialize parser
             $f->init();
         }
-    }
-
-    /**
-     * @param string $handler External parser for material
-     *
-     * @return $this
-     */
-    public function setMaterialHandler($handler = '') {
-        if (is_callable($handler)) {
-            $this->materialHandler = $handler;
-        }
-        return $this;
     }
 
     /**
@@ -197,7 +183,7 @@ class Material extends ColumnParser
     /**
      * Generic material table object parser
      *
-     * @param string $name Material name
+     * @param string $name Material unique identifier
      * @param null   $url
      * @param int    $published
      * @param int    $active
@@ -215,9 +201,14 @@ class Material extends ColumnParser
             // Strore unique value
             $this->uniques[$name] = '';
 
-            $m 				= new \samson\activerecord\material(false);
-            $m->Name 		= $name;
-            $m->Url 		= $this->url_prefix.utf8_translit($name);
+            // Try to find existing material by identifier
+            if (!dbQuery('material')->id($name)->first($m)) {
+                // Create new material record and fill its default fields
+                $m = new \samson\activerecord\material(false);
+                $m->Name = $name;
+                $m->Url  = $this->url_prefix.utf8_translit($name);
+            }
+
             $m->Published 	= $published;
             $m->Active 		= $active;
             $m->UserID 		= !isset($user_id) ? Excel2::$user->id : $user_id;
