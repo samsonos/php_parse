@@ -64,9 +64,11 @@ abstract class ColumnParser
 
 		// If main columns exists
 		if (isset($value)) {
-
-            // Remove unnecessary spaces
-            $value = trim($value);
+            // If this isn't wysiwyg field
+            if(!is_object($value)){
+                // Remove unnecessary spaces
+                $value = trim($value);
+            }
 
             // If value is not empty
             if ($value != '') {

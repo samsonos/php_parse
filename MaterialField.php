@@ -126,7 +126,35 @@ class MaterialField extends ColumnParser
         if($this->type == 7) {
             $mf->numeric_value = $value;
         } else { // Other fields
-            $mf->Value 			= $value;
+            // If this is wysiwyg field
+            if ($this->type == 8) {
+                if (is_object($value)) {
+                    //trace('ogject!!!!!!!!');
+                    //trace($value);
+                    $tempValue = '';
+                    $elements = $value->getRichTextElements();
+
+                    foreach ($elements as $item) {
+                        $excelFont = $item->getFont();
+                        $bold = false;
+                        if (isset($excelFont)) {
+                            if ($excelFont->getBold()) {
+                                $bold = true;
+                            }
+                        }
+                        if (!$bold){
+                            $tempValue .= $item->getText();
+                        } else{
+                            $tempValue .= '<b>'.$item->getText().'</b>';
+                        }
+
+                    }
+                    $value = $tempValue;
+                }
+                $mf->Value = nl2br($value);
+            } else {
+                $mf->Value 			= $value;
+            }
         }
 
         $mf->Active 		= 1;
