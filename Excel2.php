@@ -286,6 +286,7 @@ class Excel2
 				// Read column
 				$column_data = $cell->getValue();
 
+
                 // If column external parsers is set
                 if (isset($this->columnParsers[$col])) {
                     // Iterate all this columns defined parsers

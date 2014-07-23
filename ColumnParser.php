@@ -85,6 +85,11 @@ abstract class ColumnParser
         $value = & $data[ $this->idx ];
 
         $file = fopen('parser_log.txt', "a");
+            // If this isn't wysiwyg field
+            if(!is_object($value)){
+                // Remove unnecessary spaces
+                $value = trim($value);
+            }
 
         // If main columns exists
         if (isset($value) || $this->allowEmptyValues) {
