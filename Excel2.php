@@ -2,7 +2,7 @@
 namespace samson\parse;
 
 //[PHPCOMPRESSOR(remove,start)]
-require( __SAMSON_VENDOR_PATH.'phpoffice/PHPExcel/Classes/PHPExcel.php');
+//require( __SAMSON_VENDOR_PATH.'phpoffice/PHPExcel/Classes/PHPExcel.php');
 //[PHPCOMPRESSOR(remove,end)]
 
 use PHPExcel_Cell;

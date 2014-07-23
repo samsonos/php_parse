@@ -20,48 +20,57 @@ abstract class ColumnParser
     /** @var  callable External success handler */
     public $successHandler;
 
+    /** @var bool Flag for allowing to create materials with empty name */
+    public $allowEmptyValues;
+
+
     /**
      * Constuctor
      *
      * @param          $idx
      * @param callable $parser External parser function
      */
-	public function __construct( $idx, $parser = null, $successHandler = null)
-	{		
-		// Set main column index
-		$this->idx = $idx;
+    public function __construct ($idx, $parser = null, $successHandler = null, $allowEmptyValues = false)
+    {
+        // Set main column index
+        $this->idx = $idx;
 
-		// Check parser routine
-		if (isset($parser)) {
-			if( is_callable($parser) ) {
+        $this->allowEmptyValues = $allowEmptyValues;
+
+        // Check parser routine
+        if (isset($parser)) {
+            if (is_callable($parser)) {
                 $this->parser = $parser;
             } else { // Trigger error
-                //e('Parser function not callable!', E_SAMSON_FATAL_ERROR );
+            //e('Parser function not callable!', E_SAMSON_FATAL_ERROR );
             }
-		}
+        }
 
         // Check parser routine
         if (isset($successHandler)) {
-            if( is_callable($successHandler) ) {
+            if (is_callable($successHandler)) {
                 $this->successHandler = $successHandler;
             } else { // Trigger error
                 //e('Success function not callable!', E_SAMSON_FATAL_ERROR );
             }
         }
     }
-	
-	/**
+
+    /**
 	 * Internal column parser callable
      * Must store $this->result field
 	 * @param mixed $value Incoming column value
 	 * @return mixed Parsing result
 	 */
-	protected abstract function & parser($value);
+    protected abstract function & parser($value);
 
     /**
      * Initialize column parser
      */
-    public function init(){}
+    public function init()
+    {
+
+    }
 
     /**
      * Perform column parsing from data
@@ -69,25 +78,29 @@ abstract class ColumnParser
      * @param integer	$row_idx	Current row index
      * @return \samson\activerecord\material Created and saved object
      */
-	public function parse(array $data, $row_idx)
-	{
+    public function parse(array $data, $row_idx)
+    {
+
         // Get column value
         $value = & $data[ $this->idx ];
 
-		// If main columns exists
-		if (isset($value)) {
+        $file = fopen('parser_log.txt', "a");
+
+        // If main columns exists
+        if (isset($value) || $this->allowEmptyValues) {
 
             // Remove unnecessary spaces
             $value = trim($value);
 
             // If value is not empty
-            if ($value != '') {
+            if ($value != '' || $this->allowEmptyValues) {
 
                 // Store input
                 $this->result = $value;
 
                 // If external parser is set
                 if (isset($this->parser)) {
+
                     // Call it and save parsed value
                     $this->result = call_user_func($this->parser, $value);
                 }
@@ -99,12 +112,19 @@ abstract class ColumnParser
                 return $this->success($data, $row_idx, $value);
 
             } else { // Empty column error
-                return e('Row # ##, Cannot parse column ##, Column value is empty', D_SAMSON_ACTIVERECORD_DEBUG, array($row_idx, $this->idx));
+                $file_string = date("Y-m-d H:i:s").' --- Row '.$row_idx.', Cannot parse column '
+                    .$this->idx.', value is empty'.PHP_EOL;
+                fwrite($file, $file_string);
+                // return e('Row # ##, Cannot parse column ##, Column value is empty', D_SAMSON_ACTIVERECORD_DEBUG, array($row_idx, $this->idx));
             }
-
         } else {
-			return e('Cannot parse row ##, Main column ## does not exists', E_SAMSON_FATAL_ERROR, array($row_idx,$this->idx));
+            $file_string = date("Y-m-d H:i:s").' --- Cannot parse row '.$row_idx.', Main column  '
+                .$this->idx.', does not exists'.PHP_EOL;
+            fwrite($file, $file_string);
+            // return e('Cannot parse row ##, Main column ## does not exists', E_SAMSON_FATAL_ERROR, array($row_idx,$this->idx));
 		}
+
+        fclose($file);
 	}
 
     /**
