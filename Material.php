@@ -10,6 +10,7 @@ class Material extends ColumnParser
 	/** Special url prefix */		
 	protected $url_prefix = '';
 
+
 	/** @var MaterialField[] Collection of materialfield table object parsers */
 	protected $fields = array();
 
@@ -182,7 +183,7 @@ class Material extends ColumnParser
     /**
      * Generic material table object parser
      *
-     * @param string $name Material name
+     * @param string $name Material unique identifier
      * @param null   $url
      * @param int    $published
      * @param int    $active
@@ -193,15 +194,36 @@ class Material extends ColumnParser
      */
 	public function & parser($name, $url = null, $published = 1, $active = 1, $user_id = null)
 	{
-        $m 				= new \samson\activerecord\material(false);
-        $m->Name 		= $name;
-        $m->Url 		= $this->url_prefix.utf8_translit($name);
-        $m->Published 	= $published;
-        $m->Active 		= $active;
-        $m->UserID 		= !isset($user_id) ? Excel2::$user->id : $user_id;
-        $m->save();
+        $m = null;
 
-		return $m;			
+        // If we have not parsed this material earlier
+        if (!isset($this->uniques[$name])) {
+            // Strore unique value
+            //$this->uniques[$name] = '';
+           // trace('parse');
+            // Try to find existing material by identifier
+            if (!dbQuery('material')->id($name)->first($m)) {
+                // Create new material record and fill its default fields
+                $m = new \samson\activerecord\material(false);
+                $m->Name = $name;
+                $m->Url  = $this->url_prefix.utf8_translit($name);
+            }
+
+            $m->Published 	= $published;
+            $m->Active 		= $active;
+            $m->UserID 		= !isset($user_id) ? Excel2::$user->id : $user_id;
+            $m->save();
+
+            // Handle unique material
+        } else { // Trigger duplicate warning
+            //e('Found duplicate material by ## at ##', D_SAMSON_DEBUG, array($value, $row_idx));
+        }
+
+        if (isset($this->materialHandler)) {
+            call_user_func($this->materialHandler, $m);
+        }
+
+        return $m;
 	}
 
 	/** @see \samson\parse\ColumnParser::success() */
@@ -209,13 +231,6 @@ class Material extends ColumnParser
 	{
         // Check if we have received material object
         if ($this->result instanceof \samson\activerecord\dbRecord ) {
-
-            // If we have not parsed this material earlier
-            if (!isset($this->uniques[$this->result->id])) {
-                // Handle unique material
-            } else { // Trigger duplicate warning
-                e('Found duplicate material by ## at ##', D_SAMSON_DEBUG, array($value, $row_idx));
-            }
 
             // Iterate material field parsers
             foreach ($this->fields as $f) {
@@ -225,7 +240,7 @@ class Material extends ColumnParser
             }
 
         } else { // Trigger error
-            return e('Cannot parse row ##, Material has not been created! ##',E_SAMSON_FATAL_ERROR, array($row_idx, $this->result));
+            //return e('Cannot parse row ##, Material has not been created! ##',E_SAMSON_FATAL_ERROR, array($row_idx, $this->result));
         }
 
 		return $this->result;

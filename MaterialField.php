@@ -116,14 +116,14 @@ class MaterialField extends ColumnParser
      * @internal param string $material_id Material identifier in material table
      * @return \samson\activerecord\materialfield MaterialField table object
      */
-	public function & parser($value)
-	{
+    public function & parser($value)
+    {
         $mf = new \samson\activerecord\MaterialField(false);
         $mf->FieldID 		= $this->db_field->id;
         $mf->MaterialID 	= $this->material->result->id;
 
         // If this is numeric field
-        if($this->type == 7) {
+        if ($this->type == 7) {
             $mf->numeric_value = $value;
         } else { // Other fields
             // If this is wysiwyg field
@@ -161,6 +161,6 @@ class MaterialField extends ColumnParser
         $mf->locale 		= isset($this->locale) ? $this->locale : '';
         $mf->save();
 
-		return $mf;
-	}
+        return $mf;
+    }
 }
