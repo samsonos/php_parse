@@ -204,6 +204,11 @@ class SamsonCMS
 				->group_by('MaterialID')
 			->fields('MaterialID');
 
+            $material_ids =	dbQuery('samson\activerecord\material')
+                ->UserID(2)
+                ->group_by('MaterialID')
+                ->fields('MaterialID');
+
             // Get array of fields connected to this structures
             $field_ids = dbQuery('structurefield')->StructureID($struct_ids)->group_by('FieldID')->fields('FieldID');
             if (sizeof($field_ids)) {
@@ -222,7 +227,6 @@ class SamsonCMS
 
             // If we have found materials
             if(sizeof($material_ids)) {
-
                 // convert array to string, for prepare it to SQL query
                 $material_ids = implode (', ', $material_ids);
 
