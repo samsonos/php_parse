@@ -197,9 +197,9 @@ class Material extends ColumnParser
         $m = null;
 
         // If we have not parsed this material earlier
-        if (!isset($this->uniques[$name])) {
+        if ($this->allowEmptyValues || !isset($this->uniques[$name])) {
             // Strore unique value
-            //$this->uniques[$name] = '';
+            $this->uniques[$name] = '';
            // trace('parse');
             // Try to find existing material by identifier
             if (!dbQuery('material')->id($name)->first($m)) {

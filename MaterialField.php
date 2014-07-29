@@ -134,6 +134,7 @@ class MaterialField extends ColumnParser
                     $tempValue = '';
                     $elements = $value->getRichTextElements();
 
+
                     foreach ($elements as $item) {
                         $excelFont = $item->getFont();
                         $bold = false;
