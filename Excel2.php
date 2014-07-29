@@ -1,12 +1,8 @@
 <?php
 namespace samson\parse;
 
-//[PHPCOMPRESSOR(remove,start)]
-//require( __SAMSON_VENDOR_PATH.'phpoffice/phpexcel/Classes/PHPExcel.php');
-//[PHPCOMPRESSOR(remove,end)]
-
-use PHPExcel_Cell;
-use PHPExcel_IOFactory;
+use \PHPExcel_Cell;
+use \PHPExcel_IOFactory;
 use samson\activerecord\dbRelation;
 
 class Excel2
