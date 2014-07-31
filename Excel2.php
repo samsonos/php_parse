@@ -225,7 +225,7 @@ class Excel2
 	public function parse($clear = false)
 	{		
 		set_time_limit( Parse::TIME_LIMIT );
-				
+
 		// Clear old parent structure entities if necessary
         if ( $clear && isset($this->parent_structure)) {
             SamsonCMS::structure_clear($this->parent_structure);

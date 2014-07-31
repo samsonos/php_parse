@@ -219,10 +219,6 @@ class Material extends ColumnParser
             //e('Found duplicate material by ## at ##', D_SAMSON_DEBUG, array($value, $row_idx));
         }
 
-        if (isset($this->materialHandler)) {
-            call_user_func($this->materialHandler, $m);
-        }
-
         return $m;
 	}
 

@@ -168,14 +168,16 @@ class SamsonCMS
 
 			} else {
 				// save structure material
-				foreach ( $parents as $parent )
-				{
-					$sm = new \samson\activerecord\StructureMaterial (false);
-					$sm->MaterialID = $v->MaterialID;
-					$sm->StructureID = $parent['StructureID'];
-					$sm->Active = 1;
-					$sm->save();
-				}
+                foreach ( $parents as $parent )
+                {
+                    if (!dbQuery('\samson\activerecord\structurematerial')->MaterialID($v->MaterialID)->StructureID($parent['StructureID'])->first($sm)) {
+                        $sm = new \samson\activerecord\structurematerial (false);
+                    }
+                    $sm->MaterialID = $v->MaterialID;
+                    $sm->StructureID = $parent['StructureID'];
+                    $sm->Active = 1;
+                    $sm->save();
+                }
             }
 		}
 	
