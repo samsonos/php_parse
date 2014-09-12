@@ -118,9 +118,10 @@ class MaterialField extends ColumnParser
      */
     public function & parser($value)
     {
-        if (!dbQuery('\samson\activerecord\materialfield')->MaterialID($this->material->result->id)->FieldID($this->db_field->id)->first($mf)) {
-            $mf = new \samson\activerecord\materialfield(false);
-        }
+        $mf = new \samson\activerecord\materialfield(false);
+//        if (!dbQuery('\samson\activerecord\materialfield')->MaterialID($this->material->result->id)->FieldID($this->db_field->id)->first($mf)) {
+//
+//        }
 
         $mf->FieldID 		= $this->db_field->id;
         $mf->MaterialID 	= $this->material->result->id;
