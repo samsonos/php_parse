@@ -228,6 +228,7 @@ class Excel2
 
 		// Clear old parent structure entities if necessary
         if ( $clear && isset($this->parent_structure)) {
+            //
             SamsonCMS::structure_clear($this->parent_structure);
         }
 
