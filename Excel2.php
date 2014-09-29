@@ -28,9 +28,6 @@ class Excel2
     /** Number fo row to start parsing from */
 	public $from_row;
 	
-	/** File for parsing */
-	public $file_name;
-	
 	/** Set parent structure to work with */
 	protected $parent_structure;
 	
@@ -42,7 +39,9 @@ class Excel2
 	
 	/** Array for material unuiqueness */
 	public $uniques = array();
-	
+
+    /** @var iAdapter adapter  */
+    public $adapter;
 	/**
 	 * Add external Material parser object to material parsers collection
 	 * @param Material $m Pointer to Material parser object
@@ -174,14 +173,14 @@ class Excel2
 
     /**
      * Constructor
-     * @param string $file_name Path to file
-     * @param int    $from_row  Starting row
-     * @param string $userName  Default parser user name
+     * @param iAdapter $adapter
+     * @param int      $from_row
+     * @param string   $userName
      */
-    public function __construct( $file_name, $from_row = 0, $userName = 'Parser')
+    public function __construct(iAdapter $adapter, $from_row = 0, $userName = 'Parser')
 	{
-		$this->file_name = $file_name;
 		$this->from_row = $from_row;
+        $this->adapter = $adapter;
 
         // Try to find user for storing data into tables
         if(!dbQuery('user')->FName($userName, dbRelation::LIKE)->first(self::$user)) {
@@ -192,28 +191,7 @@ class Excel2
         }
 	}	
 	
-	/**
-	 * Convert extension of file to extension that need for parser
-	 * @param $file_name string name of file that you wanna parse
-	 * @return string extension that need function parse_excel
-	 */
-	private function get_extension($file_name){
-	
-		// get extension of file, by php built-in function
-		$extension = pathinfo($file_name);
-        $extension = $extension['extension'];
-	
-		switch ($extension) {
-			case 'xlsx': $extension = 'Excel2007'; break;
-			case 'xls': $extension = 'Excel5'; break;
-			case 'ods': $extension = 'OOCalc'; break;
-			case 'slk': $extension = 'SYLK'; break;
-			case 'xml': $extension = 'Excel2003XML'; break;
-			case 'gnumeric': $extension = 'Gnumeric'; break;
-			default: echo 'This parser read file with extention: xlsx, xls, ods, slk, xml, gnumeric';
-		}
-		return $extension;
-	}
+
 
     /**
      * Parse excel file and save each row in array
@@ -231,22 +209,6 @@ class Excel2
             //
             SamsonCMS::structure_clear($this->parent_structure);
         }
-
-		// Convert extension of file to extension that need for parser
-		$extension = $this->get_extension($this->file_name);
-		
-		$objReader = PHPExcel_IOFactory::createReader($extension);
-		$objReader->setReadDataOnly(false);
-		
-		$objPHPExcel = $objReader->load($this->file_name);
-		$objWorksheet = $objPHPExcel->getActiveSheet();
-		
-		// Get rows count
-		$highestRow = $objWorksheet->getHighestDataRow();
-		
-		// Get columns count
-		$highestColumn = $objWorksheet->getHighestColumn();
-		$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
 		
 		// display how many rows and column parsed
 		//elapsed('Parsing '.$highestRow.' rows, with '.$highestColumnIndex.' columns');	
@@ -254,34 +216,18 @@ class Excel2
 		// array that conteins arrays which contein one row
 		$all_rows = array();
 
-        // Get all merged cells
-        $mergedCellsRange = $objWorksheet->getMergeCells();
-		
 		// Iterate rows
-		for ($i = $this->from_row; $i < $highestRow; $i++)
+		for ($i = $this->from_row; $i < $this->adapter->getRowsCount(); $i++)
 		{
 			// array that contains all entry of row
 			$row = array();
 			
 			// Iterate columns
-			for ($col = 0; $col < $highestColumnIndex; $col++)
+			for ($col = 0; $col < $this->adapter->getColumnsCount(); $col++)
 			{
-                // Get current cell
-                $cell = $objWorksheet->getCellByColumnAndRow($col, $i);
-
-                // Find if this is cell is merged with others
-                foreach($mergedCellsRange as $currMergedRange)
-                {
-                    if($cell->isInRange($currMergedRange))
-                    {
-                        $currMergedCellsArray = PHPExcel_Cell::splitRange($currMergedRange);
-                        $cell = $objWorksheet->getCell($currMergedCellsArray[0][0]);
-                        break;
-                    }
-                }
 
 				// Read column
-				$column_data = $cell->getValue();
+				$column_data = $this->adapter->getValue($col, $i);
 
 
                 // If column external parsers is set
