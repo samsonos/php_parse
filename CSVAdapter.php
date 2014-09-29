@@ -11,10 +11,41 @@
  * @copyright 2014 SamsonOS
  * @version 
  */
-class CSVAdapter
+class CSVAdapter implements iAdapter
 {
-    public function __construct()
+    public $delimiter;
+
+    public $file;
+
+    public function __construct($filename, $delimiter = ';')
     {
-        
+        if (file_exists($filename)) {
+            $this->file = file($filename);
+        }
+
+        $this->delimiter = $delimiter;
+    }
+
+    public function getRowsCount()
+    {
+        return sizeof($this->file);
+    }
+
+    public function getColumnsCount()
+    {
+        return sizeof(str_getcsv($this->file[2], ';'));
+    }
+
+    /**
+     * @param $column
+     * @param $row
+     *
+     * @return mixed
+     */
+    public function getValue($column, $row)
+    {
+        $currentRow = $this->file[$row];
+        $currentColumn = str_getcsv($currentRow, ';');
+        return trim($currentColumn[$column]);
     }
 }
