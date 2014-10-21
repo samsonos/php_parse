@@ -1,8 +1,6 @@
 <?php
 namespace samson\parse;
 
-use \PHPExcel_Cell;
-use \PHPExcel_IOFactory;
 use samson\activerecord\dbRelation;
 
 class Excel2

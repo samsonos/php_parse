@@ -5,10 +5,6 @@
  */
  namespace samson\parse;
 
-
- use \PHPExcel_Cell;
- use \PHPExcel_IOFactory;
-
 /**
  *
  * @author Pavlo Onysko <onysko@samsonos.com>
@@ -26,7 +22,7 @@ class ExcelAdapter implements iAdapter
         // Convert extension of file to extension that need for parser
         $extension = $this->get_extension($filename);
 
-        $objReader = PHPExcel_IOFactory::createReader($extension);
+        $objReader = \PHPExcel_IOFactory::createReader($extension);
         $objReader->setReadDataOnly(false);
 
         $objPHPExcel = $objReader->load($filename);
@@ -75,7 +71,7 @@ class ExcelAdapter implements iAdapter
     public function getColumnsCount()
     {
         $highestColumn = $this->objWorksheet->getHighestColumn();
-        return PHPExcel_Cell::columnIndexFromString($highestColumn);
+        return \PHPExcel_Cell::columnIndexFromString($highestColumn);
     }
 
     /**
@@ -91,7 +87,7 @@ class ExcelAdapter implements iAdapter
 
         foreach ($this->mergedCellsRange as $currMergedRange) {
             if ($cell->isInRange($currMergedRange)) {
-                $currMergedCellsArray = PHPExcel_Cell::splitRange($currMergedRange);
+                $currMergedCellsArray = \PHPExcel_Cell::splitRange($currMergedRange);
                 $cell = $this->objWorksheet->getCell($currMergedCellsArray[0][0]);
                 break;
             }
