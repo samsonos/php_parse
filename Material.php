@@ -14,6 +14,9 @@ class Material extends ColumnParser
 	/** @var MaterialField[] Collection of materialfield table object parsers */
 	protected $fields = array();
 
+    /** @var int $fieldsCounter Counter to enable multiple same number columns usage */
+    private $fieldsCounter;
+
 	/** string[] Structure tree array */
 	public $structures = array();
 
@@ -51,10 +54,14 @@ class Material extends ColumnParser
             // Iterate localized columns
             foreach ($idx as $locale => $column) {
                 // Create materialfield table object parser
-                $this->fields[$column] = new MaterialField($column, $field, $this, $parser, $structure, $description, $type, $value, $locale);
+                $this->fields[$this->fieldsCounter] = new MaterialField($column, $field, $this, $parser, $structure, $description, $type, $value, $locale);
+                // Increase fields count
+                $this->fieldsCounter++;
             }
         } else { // Not localized material
-            $this->fields[$idx] = new MaterialField($idx, $field, $this, $parser, $structure, $description, $type, $value);
+            $this->fields[$this->fieldsCounter] = new MaterialField($idx, $field, $this, $parser, $structure, $description, $type, $value);
+            // Increase fields count
+            $this->fieldsCounter++;
         }
 
 		return $this;
@@ -168,7 +175,9 @@ class Material extends ColumnParser
     public function gallery($idx, $path = 'cms/upload/', $parser = null, $token = ',')
     {
         // Create new gallery parser
-        $this->fields[$idx] = new Gallery($idx, $this, $parser, $token, $path );
+        $this->fields[$this->fieldsCounter] = new Gallery($idx, $this, $parser, $token, $path );
+        // Increase fields count
+        $this->fieldsCounter++;
 
         return $this;
     }

@@ -11,28 +11,28 @@ class MaterialField extends ColumnParser
      * Pointer to parent material
      * @var Material
      */
-	protected $material;
+	public $material;
 	
 	/** Pointer to field table object */
-	protected $db_field;
+    public $db_field;
 
     /** @var \samson\activerecord\structure Pointer to parent structure */
-    protected $parentStructure;
+    public $parentStructure;
 
     /** @var string Field name */
-    protected $name;
+    public $name;
 
     /** @var  Default field value */
-    protected $defaultValue;
+    public $defaultValue;
 
     /** @var  Field type */
-    protected $type;
+    public $type;
 
     /** @var string Field description */
-    protected $description;
+    public $description;
 
     /** @var string MaterialField locale */
-    protected $locale;
+    public $locale;
 
     /**
      * Constructor

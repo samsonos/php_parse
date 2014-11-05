@@ -107,7 +107,7 @@ abstract class ColumnParser
                 if (isset($this->parser)) {
 
                     // Call it and save parsed value
-                    $this->result = call_user_func($this->parser, $data);
+                    $this->result = call_user_func($this->parser, $data, $this);
                 } else {
 
                     // Call generic parser
