@@ -4,7 +4,8 @@
 	"version":"1.0.1",
 	"require":{
 		"samsonos/php_activerecord":"*",
-		"samsonos/cms_api":"*"
+		"samsonos/cms_api":"*",
+		"phpoffice/phpexcel": "1.8.0"
 	},
 	"license":"Open Software License (OSL) v 3.0",
 	"homepage":"http://samsonos.com/"
