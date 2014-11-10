@@ -188,28 +188,26 @@ class SamsonCMS
 	 * @param \samson\cms\CMSNav $structure must contain structure of witch you wanna delete material
 	 */
 	public static function structure_clear(\samson\cms\CMSNav $structure)
-	{		
-		$struct_ids = array( $structure->id );
-
-		// get array that contain structure ids
-		self::structure_ids( $structure, $struct_ids );
+	{
+        // Gather all identifier of nested structure tree
+        $struct_ids = array($structure->id);
+        self::structure_ids($structure, $struct_ids);
 
         // If we have found nested structure ids
-		if( isset($struct_ids) )
-		{
-			// convert array to string, for prepare it to SQL query
-			$struct_ids = implode (', ', $struct_ids);		
-	
-			// get array that contain material ids
+		if (dbQuery('structure')->id($struct_ids)->fieldsNew('StructureID', $struct_ids)) {
+
+			// Get array that contain material ids for found structures
 			$material_ids =	dbQuery('samson\activerecord\structurematerial')
 				->StructureID($struct_ids)
 				->group_by('MaterialID')
-			->fields('MaterialID');
+			->fieldsNew('MaterialID');
 
+            // Get all material identifiers
             $material_ids =	dbQuery('samson\activerecord\material')
-                ->UserID(2)
+                ->id($material_ids)
+                ->cond('system', 0)
                 ->group_by('MaterialID')
-                ->fields('MaterialID');
+                ->fieldsNew('MaterialID');
 
             // Get array of fields connected to this structures
             $field_ids = dbQuery('structurefield')->StructureID($struct_ids)->group_by('FieldID')->fields('FieldID');
@@ -219,6 +217,8 @@ class SamsonCMS
                 // Clear all fields
                 db()->simple_query('DELETE FROM field WHERE FieldID IN ('.$field_ids.')');
             }
+
+            $struct_ids = implode(',', $struct_ids);
 
             // Clear all structures
             db()->simple_query('DELETE FROM structure WHERE StructureID IN ('.$struct_ids.') AND StructureID != '.$structure->id);
