@@ -5,7 +5,8 @@
 	"require":{
 		"samsonos/php_activerecord":"*",
 		"samsonos/cms_api":"*",
-		"phpoffice/phpexcel": "1.8.0"
+		"phpoffice/phpexcel": "1.8.0",
+        "faisalman/simple-excel-php" : "0.4.0-alpha"
 	},
     "autoload" : {
         "classmap": ["src/"],
