@@ -72,6 +72,6 @@ class SimpleExcelAdapter implements iAdapter
      */
     public function getValue($column, $row)
     {
-        return $this->objWorksheet->getCell($column, $row);
+        return $this->objWorksheet->getCell($row, $column);
     }
 }
