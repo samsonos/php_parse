@@ -5,8 +5,8 @@
  */
  namespace samson\parse;
 
- use SimpleExcel\SimpleExcel;
- use SimpleExcel\Spreadsheet\Worksheet;
+ /*use SimpleExcel\SimpleExcel;
+ use SimpleExcel\Spreadsheet\Worksheet;*/
 
 /**
  * SamsonPHP parse SimpleExcel adapter
@@ -27,7 +27,7 @@ class SimpleExcelAdapter implements iAdapter
 
     public function __construct($filename)
     {
-        // instantiate new object (will automatically construct the parser & writer type as XML)
+        /*// instantiate new object (will automatically construct the parser & writer type as XML)
         $excel = new SimpleExcel();
 
         // load an XML file from server to be parsed
@@ -41,7 +41,7 @@ class SimpleExcelAdapter implements iAdapter
 
         // Get dimensions
         $this->recordsCount = sizeof($records);
-        $this->columnsCount = sizeof($records[0]);
+        $this->columnsCount = sizeof($records[0]);*/
     }
 
     /**
