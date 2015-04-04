@@ -19,11 +19,15 @@ class CSVAdapter implements iAdapter
 
     public function __construct($filename, $delimiter = ';')
     {
-        if (file_exists($filename)) {
-            $this->file = file($filename);
-        }
-
         $this->delimiter = $delimiter;
+        if (file_exists($filename)) {
+
+            $this->handle = fopen($filename, 'r');
+
+            while ($data = fgetcsv($this->handle, null, $this->delimiter)) {
+                $this->file[] = $data;
+            }
+        }
     }
 
     public function getRowsCount()
@@ -33,7 +37,7 @@ class CSVAdapter implements iAdapter
 
     public function getColumnsCount()
     {
-        return sizeof(str_getcsv($this->file[2], ';'));
+        return sizeof($this->file[2]);
     }
 
     /**
@@ -44,8 +48,11 @@ class CSVAdapter implements iAdapter
      */
     public function getValue($column, $row)
     {
-        $currentRow = $this->file[$row];
-        $currentColumn = str_getcsv($currentRow, ';');
-        return trim($currentColumn[$column]);
+        return trim($this->file[$row][$column]);
+    }
+
+    public function  __destruct()
+    {
+        fclose($this->handle);
     }
 }

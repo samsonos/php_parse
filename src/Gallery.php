@@ -45,7 +45,7 @@ class Gallery extends ColumnParser
      * @param string $value Gallery image name
      * @return \samson\activerecord\gallery Gallery record
      */
-	public function & parser($value)
+	public function & parser($value, $data)
 	{
         // Try to split value using passed token
         foreach (explode($this->token, $value) as $photo) {

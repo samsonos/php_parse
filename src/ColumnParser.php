@@ -62,7 +62,7 @@ abstract class ColumnParser
 	 * @param mixed $value Incoming column value
 	 * @return mixed Parsing result
 	 */
-    protected abstract function & parser($value);
+    protected abstract function & parser($value, $data);
 
     /**
      * Initialize column parser
@@ -111,7 +111,7 @@ abstract class ColumnParser
                 } else {
 
                     // Call generic parser
-                    $this->result = $this->parser($this->result);
+                    $this->result = $this->parser($this->result, $data);
                 }
                 // Return success handler function
                 return $this->success($data, $row_idx, $value);
