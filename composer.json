@@ -2,9 +2,10 @@
 	"name":"samsonos/php_parse",
 	"author":"Vitaly Iegorov <egorov@samsonos.com>",
 	"version":"1.0.1",
+	"minimum-stability": "dev",
 	"require":{
 		"samsonos/php_activerecord":"*",
-		"samsonos/cms_api":"*",
+		"samsoncms/api":"*",
 		"phpoffice/phpexcel": "1.8.0"
 	},
     "autoload" : {
@@ -14,6 +15,11 @@
             "samson\\parse\\": "src/"
         }
     },
+    "config": {
+    "github-protocols": [
+      "https"
+    ]
+  },
 	"license":"Open Software License (OSL) v 3.0",
 	"homepage":"http://samsonos.com/"
 	}
