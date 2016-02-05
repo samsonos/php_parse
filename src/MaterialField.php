@@ -116,12 +116,16 @@ class MaterialField extends ColumnParser
      * @internal param string $material_id Material identifier in material table
      * @return \samson\activerecord\materialfield MaterialField table object
      */
-    public function & parser($value)
+    public function & parser($value, $data)
     {
-        $mf = new \samson\activerecord\materialfield(false);
-//        if (!dbQuery('\samson\activerecord\materialfield')->MaterialID($this->material->result->id)->FieldID($this->db_field->id)->first($mf)) {
-//
-//        }
+        $mf = null;
+        if (!dbQuery('\samson\activerecord\materialfield')
+            ->cond('MaterialID', $this->material->result->id)
+            ->cond('FieldID', $this->db_field->id)
+            ->cond('locale', isset($this->locale) ? $this->locale : '')
+            ->first($mf)) {
+            $mf = new \samson\activerecord\materialfield(false);
+        }
 
         $mf->FieldID 		= $this->db_field->id;
         $mf->MaterialID 	= $this->material->result->id;

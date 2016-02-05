@@ -18,7 +18,11 @@ class Material extends ColumnParser
     private $fieldsCounter;
 
 	/** string[] Structure tree array */
-	public $structures = array();
+    public $structures = array();
+
+    public $uniqueArray = array();
+
+    public $findByField = array();
 
     /** Pass column index as arguments for material structure creation */
 	public function structure( $s_1, $s_2 = null, $s_3 = null, $s_4=null ){ $this->structures[] = func_get_args(); return $this; }
@@ -32,6 +36,18 @@ class Material extends ColumnParser
             // Initialize parser
             $f->init();
         }
+    }
+
+    public function __construct ($idx, $parser = null, $successHandler = null, $allowEmptyValues = false, array $uniqueArray = array(), array $findByField = array())
+    {
+        parent::__construct($idx, $parser, $successHandler, $allowEmptyValues);
+        if (empty($uniqueArray)) {
+            $this->uniqueArray = dbQuery('material')->fields('Name');
+        } else {
+            $this->uniqueArray = $uniqueArray;
+        }
+
+        $this->findByField = $findByField;
     }
 
     /**
@@ -201,29 +217,34 @@ class Material extends ColumnParser
      * @see \samson\parse\ColumnParser::parser()
      * @return \samson\activerecord\material Material table object
      */
-	public function & parser($name, $url = null, $published = 1, $active = 1, $user_id = null)
+	public function & parser($name, $data, $url = null, $published = 1, $active = 1, $user_id = null)
 	{
         $m = null;
 
-        // If we have not parsed this material earlier
         if ($this->allowEmptyValues || !isset($this->uniques[$name])) {
-            // Strore unique value
             $this->uniques[$name] = '';
-           // trace('parse');
-            // Try to find existing material by identifier
-            if (!dbQuery('material')->id($name)->first($m)) {
-                // Create new material record and fill its default fields
+            $inArrayValue = isset($this->findByField['index']) ? $data[$this->findByField['index']] : $name;
+
+            if (!in_array($inArrayValue, $this->uniqueArray)) {
                 $m = new \samson\activerecord\material(false);
                 $m->Name = $name;
                 $m->Url  = $this->url_prefix.utf8_translit($name);
+                $m->Published 	= $published;
+                $m->Active 		= $active;
+                $m->UserID 		= !isset($user_id) ? Excel2::$user->id : $user_id;
+                $m->save();
+            } elseif (!empty($this->findByField)) {
+                $m = dbQuery('material')->cond($this->findByField['value'], $data[$this->findByField['index']])->first();
+                if (!$m) {
+                    $m = new \samson\activerecord\material(false);
+                }
+                $m->Name = $name;
+                $m->Url  = $this->url_prefix.utf8_translit($name);
+                $m->Published 	= $published;
+                $m->Active 		= $active;
+                $m->UserID 		= !isset($user_id) ? Excel2::$user->id : $user_id;
+                $m->save();
             }
-
-            $m->Published 	= $published;
-            $m->Active 		= $active;
-            $m->UserID 		= !isset($user_id) ? Excel2::$user->id : $user_id;
-            $m->save();
-
-            // Handle unique material
         } else { // Trigger duplicate warning
             //e('Found duplicate material by ## at ##', D_SAMSON_DEBUG, array($value, $row_idx));
         }

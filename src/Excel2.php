@@ -25,6 +25,9 @@ class Excel2
 
     /** Number fo row to start parsing from */
 	public $from_row;
+
+    /** Number fo row to start parsing from */
+    public $to_row;
 	
 	/** Set parent structure to work with */
 	protected $parent_structure;
@@ -175,12 +178,17 @@ class Excel2
      * @param int      $from_row
      * @param string   $userName
      */
-    public function __construct(iAdapter $adapter, $from_row = 0, $userName = 'Parser')
+    public function __construct(iAdapter $adapter, $from_row = 0, $to_row = null, $userName = 'Parser')
 	{
 		$this->from_row = $from_row;
         $this->adapter = $adapter;
+        if (isset($to_row)) {
+            $this->to_row = $to_row;
+        } else {
+            $this->to_row = $this->adapter->getRowsCount();
+        }
 
-        // Try to find user for storing data into tables
+            // Try to find user for storing data into tables
         if(!dbQuery('user')->FName($userName, dbRelation::LIKE)->first(self::$user)) {
             // Create new user object
             self::$user = new \samson\activerecord\User(false);
@@ -215,7 +223,7 @@ class Excel2
 		$all_rows = array();
 
 		// Iterate rows
-		for ($i = $this->from_row; $i < $this->adapter->getRowsCount(); $i++)
+		for ($i = $this->from_row; $i < $this->to_row; $i++)
 		{
 			// array that contains all entry of row
 			$row = array();
