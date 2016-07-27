@@ -1,8 +1,6 @@
 {
 	"name":"samsonos/php_parse",
 	"author":"Vitaly Iegorov <egorov@samsonos.com>",
-	"version":"1.0.1",
-	"minimum-stability": "dev",
 	"require":{
 		"samsonos/php_activerecord":"*",
 		"samsoncms/api":"*",
